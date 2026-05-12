@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mac Chicken - De la brasa a tu casa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+<header>
+    <img src="img/ral.jpg" alt="Logo Mac Chicken" onerror="this.style.display='none'">
+    <div class="logo-box">
+        <span class="titulo-logo">MAC<br>CHICKEN</span>
+    </div>
+</header>
+
+<nav>
+    <a onclick="filter('all')">Todos</a>
+    <a onclick="filter('pollo')">Pollo</a>
+    <a onclick="filter('bebidas')">Bebidas</a>
+    <a onclick="filter('calientes')">Calientes</a>
+</nav>
+
+<div id="cart-toggle" class="cart-mobile-btn" onclick="toggleCart()">
+    <i class="fas fa-shopping-basket"></i>
+    <span id="cart-count">0</span>
+</div>
+
+<div class="main-layout">
+    <div class="container" id="products">
+        </div>
+
+    <aside id="cart">
+        <div class="cart-header">
+            <h2><i class="fas fa-shopping-cart"></i> Tu Pedido</h2>
+            <button class="close-cart" onclick="toggleCart()">×</button>
+        </div>
+        
+        <div id="cart-items">
+            <p class="empty-msg">Tu carrito está vacío</p>
+        </div>
+        
+        <div class="total-container">
+            <span class="total-label">TOTAL A PAGAR</span>
+            <span class="total-amount">S/ <span id="total">0.00</span></span>
+        </div>
+
+        <div class="user-data">
+            <input type="text" placeholder="Tu Nombre" id="name" oninput="update()">
+            <input type="text" placeholder="Tu Dirección" id="location" oninput="update()">
+        </div>
+
+        <a id="whatsapp" class="whatsapp disabled" onclick="checkOrder()">
+            <i class="fab fa-whatsapp"></i> PEDIR POR WHATSAPP
+        </a>
+    </aside>
+</div>
+
+<div id="overlay" onclick="toggleCart()"></div>
+
+<footer>
+    <p><strong>Ubicación:</strong> Km 4.5 Carretera Pimentel (Cruce Colegio Algarrobos)</p>
+    <p><strong>Atención:</strong> Martes a Domingos</p>
+    <p>&copy; 2026 Mac Chicken - Todos los derechos reservados.</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
