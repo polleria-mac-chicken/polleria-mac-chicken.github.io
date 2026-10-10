@@ -2,75 +2,464 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="google-site-verification" content="zMjtK-QWj_tBl9mr3w-sIbtOjrwXoZGo5xymXPL4UY4" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mac Chicken - De la brasa a tu casa</title>
-    <meta name="description" content="Disfruta del mejor pollo a la brasa en Chiclayo con entrega a domicilio. Revisa nuestro menú, arma tu pedido online y recíbelo directo en tu casa por WhatsApp.">
-    <meta name="keywords" content="mac chicken chiclayo, pollo a la brasa chiclayo, polleria en chiclayo, delivery de pollo chiclayo, pollo carretera pimentel">
-    <link rel="shortcut icon" href="img/favicon.png" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+    <title>Mac Chicken | Pollo a la brasa en Pimentel, Chiclayo</title>
+    <meta name="description" content="Pollo a la brasa, chaufa, mollejitas y más. Pide por delivery o recojo, reserva tu mesa y sigue tu pedido en Mac Chicken, Km 4.5 Carretera Pimentel.">
+    <meta name="theme-color" content="#1a1a1a">
+
+    <!-- Fuentes e íconos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
     <link rel="stylesheet" href="estilos.css">
 </head>
 <body>
 
-<header>
-    <img src="img/ral.jpg" alt="Logo Mac Chicken" onerror="this.style.display='none'">
-    <div class="logo-box">
-        <span class="titulo-logo">MAC<br>CHICKEN</span>
+<a class="skip-link" href="#carta">Saltar a la carta</a>
+
+<!-- =====================================================
+     CABECERA FIJA + ESTADO DEL LOCAL
+     ===================================================== -->
+<header class="site-header">
+    <div class="header-inner">
+
+        <a class="brand" href="#inicio" aria-label="Mac Chicken, ir al inicio">
+            <img class="brand-avatar" src="img/ral.jpg" alt="" onerror="this.style.display='none'">
+            <span class="logo-box">MAC CHICKEN</span>
+        </a>
+
+        <!-- ======================================================
+             🔴 DINÁMICO (PHP/MySQL): ESTADO DEL LOCAL (Abierto / Cerrado)
+             Hoy lo calcula script.js con CONFIG.horario (hora de Lima).
+             Luego: tabla `horarios` + función obtenerEstado() en script.js
+             que haga fetch('api/estado.php').
+             Solo cambia data-estado ("abierto" | "pronto" | "cerrado") y los
+             textos de los <span data-estado-*>. No toques las clases.
+             ====================================================== -->
+        <div class="status-badge" id="status-badge" data-estado="cargando" role="status" aria-live="polite">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span><span data-estado-label>Verificando</span><span class="status-extra" data-estado-extra></span></span>
+        </div>
+
+        <nav class="main-nav" id="main-nav" aria-label="Principal">
+            <a href="#inicio">Inicio</a>
+            <a href="#carta">Carta</a>
+            <a href="#pedidos">Delivery y reservas</a>
+            <a href="#ubicacion">Ubicación</a>
+            <button type="button" class="nav-track" data-action="open-track">Seguir pedido</button>
+        </nav>
+
+        <div class="header-actions">
+            <button type="button" class="icon-btn" data-action="open-cart" aria-label="Abrir mi pedido">
+                <i class="fas fa-bag-shopping" aria-hidden="true"></i>
+                <span class="count-badge" data-cart-count hidden>0</span>
+            </button>
+            <button type="button" class="icon-btn burger" data-action="toggle-nav" id="burger"
+                    aria-label="Abrir menú" aria-expanded="false" aria-controls="main-nav">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
     </div>
 </header>
 
-<nav>
-    <a onclick="filter('all')">Todos</a>
-    <a onclick="filter('pollo')">Pollo</a>
-    <a onclick="filter('bebidas')">Bebidas</a>
-    <a onclick="filter('calientes')">Calientes</a>
-</nav>
+<main>
 
-<div id="cart-toggle" class="cart-mobile-btn" onclick="toggleCart()">
-    <i class="fas fa-shopping-basket"></i>
-    <span id="cart-count">0</span>
-</div>
+    <!-- =====================================================
+         INICIO / HERO
+         ===================================================== -->
+    <!-- La foto de fondo del hero se cambia en estilos.css (sección 5): background-image: url('img/fondo-pollo.jpg') -->
+    <section class="hero" id="inicio">
+        <div class="wrap hero-inner">
+            <div class="hero-copy">
+                <h1>De la brasa a tu casa</h1>
+                <p class="hero-lead">Pollo a la brasa, chaufa y mollejitas en Pimentel. Arma tu pedido y envíalo por WhatsApp en un par de minutos.</p>
 
-<div class="main-layout">
-    <div class="container" id="products">
+                <div class="hero-cta">
+                    <a class="btn btn-dark" href="#carta"><i class="fas fa-utensils" aria-hidden="true"></i> Ver la carta</a>
+                    <button type="button" class="btn btn-outline" data-action="open-track"><i class="fas fa-location-dot" aria-hidden="true"></i> Seguir mi pedido</button>
+                </div>
+
+                <!-- 🔴 DINÁMICO: mismo estado del local (lo actualiza pintarEstado() en script.js) -->
+                <div class="hero-status glass" data-estado="cargando">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <div>
+                        <strong><span data-estado-label>Verificando</span><span data-estado-extra></span></strong>
+                        <span data-estado-detalle>Consultando el horario…</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         DELIVERY, RESERVAS Y SEGUIMIENTO
+         ===================================================== -->
+    <section class="section" id="pedidos">
+        <div class="wrap">
+            <div class="section-head">
+                <h2>Pide como prefieras</h2>
+                <p>Delivery, recojo en el local o mesa reservada. Todo se confirma por WhatsApp.</p>
+            </div>
+
+            <div class="services">
+                <article class="service service-delivery">
+                    <span class="service-icon"><i class="fas fa-motorcycle" aria-hidden="true"></i></span>
+                    <h3>Delivery o recojo</h3>
+                    <p>Elige tus platos en la carta, indica tu dirección y envía el pedido. Pagas con efectivo, Yape o Plin.</p>
+                    <div class="service-actions">
+                        <a class="btn btn-yellow" href="#carta">Armar mi pedido</a>
+                        <button type="button" class="btn btn-outline" data-action="open-cart">Ver mi pedido</button>
+                    </div>
+                </article>
+
+                <article class="service service-reserva">
+                    <span class="service-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></span>
+                    <h3>Reserva tu mesa</h3>
+                    <p>Separa tu mesa para hoy o los próximos días. Te confirmamos por WhatsApp.</p>
+                    <div class="service-actions">
+                        <button type="button" class="btn btn-dark" data-action="open-reserva">Reservar mesa</button>
+                    </div>
+                </article>
+
+                <article class="service service-track">
+                    <span class="service-icon"><i class="fas fa-route" aria-hidden="true"></i></span>
+                    <h3>Sigue tu pedido</h3>
+                    <p>Ingresa tu código y mira si tu pedido está en preparación, en camino o ya entregado.</p>
+                    <div class="service-actions">
+                        <button type="button" class="btn btn-dark" data-action="open-track">Consultar estado</button>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         CARTA DIGITAL
+         ===================================================== -->
+    <section class="section menu-section" id="carta">
+        <div class="wrap">
+            <div class="section-head">
+                <h2>La carta</h2>
+                <p>Precios en soles. Todo se prepara al momento.</p>
+            </div>
+
+            <div class="menu-tools">
+                <!-- 🔴 DINÁMICO: categorías (tabla `categorias`). Se generan desde CATEGORIAS en script.js -->
+                <div class="chips" id="chips" role="group" aria-label="Categorías de la carta"></div>
+
+                <div class="search">
+                    <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                    <input class="input" type="search" id="search" placeholder="Buscar en la carta" aria-label="Buscar en la carta" autocomplete="off">
+                </div>
+            </div>
+
+            <!-- ======================================================
+                 🔴 DINÁMICO (PHP/MySQL): LISTA DE PLATOS
+                 script.js inyecta aquí una <article class="card"> por producto
+                 (ver cardHTML() y cargarProductos()). Luego: tabla `productos`
+                 (id, nombre, precio, categoria, descripcion, imagen, etiqueta,
+                 disponible) y fetch('api/productos.php').
+                 ====================================================== -->
+            <div class="grid" id="products"></div>
+
+            <p class="menu-empty" id="menu-empty" hidden></p>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         UBICACIÓN + MAPA
+         ===================================================== -->
+    <section class="section" id="ubicacion">
+        <div class="wrap">
+            <div class="section-head">
+                <h2>Dónde estamos</h2>
+                <p>Te esperamos en la carretera a Pimentel, cerca al cruce del colegio Algarrobos.</p>
+            </div>
+
+            <div class="location-grid">
+                <div class="location-info">
+                    <div class="info-row">
+                        <span class="info-icon"><i class="fas fa-location-dot" aria-hidden="true"></i></span>
+                        <div>
+                            <strong>Dirección</strong>
+                            <p>Km 4.5 Carretera Pimentel (Cruce Colegio Algarrobos)</p>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-icon"><i class="fas fa-clock" aria-hidden="true"></i></span>
+                        <div class="info-grow">
+                            <strong>Horario de atención</strong>
+                            <!-- 🔴 DINÁMICO: se llena con renderHorarios() desde CONFIG.horario (luego tabla `horarios`) -->
+                            <ul class="hours-list" data-horarios>
+                                <li><span>Lunes</span><span>Cerrado</span></li>
+                                <li><span>Martes a domingo</span><span>Consulta el horario</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="service-actions">
+                        <a class="btn btn-dark" href="https://www.google.com/maps/search/?api=1&amp;query=Km+4.5+Carretera+Pimentel+Chiclayo" target="_blank" rel="noopener">
+                            <i class="fas fa-diamond-turn-right" aria-hidden="true"></i> Cómo llegar
+                        </a>
+                        <a class="btn btn-wa" href="https://wa.me/51979926808" target="_blank" rel="noopener">
+                            <i class="fab fa-whatsapp" aria-hidden="true"></i> Escribir
+                        </a>
+                    </div>
+                </div>
+
+                <!-- MAPA: para fijar el punto exacto, abre tu local en Google Maps →
+                     Compartir → Insertar un mapa → copia el src del iframe y reemplázalo aquí. -->
+                <div class="map-frame">
+                    <iframe title="Mapa de Mac Chicken en Google Maps"
+                            src="https://www.google.com/maps?q=Km+4.5+Carretera+Pimentel,+Chiclayo,+Per%C3%BA&amp;output=embed"
+                            loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- =====================================================
+     PIE DE PÁGINA
+     ===================================================== -->
+<footer class="site-footer">
+    <div class="wrap footer-grid">
+
+        <div class="footer-col footer-brand">
+            <span class="logo-box">MAC CHICKEN</span>
+            <p>De la brasa a tu casa. Pollo a la brasa preparado al momento.</p>
+            <!-- Redes sociales: reemplaza cada href="#" por el enlace real de tu perfil -->
+            <div class="social" aria-label="Redes sociales">
+                <a href="#" aria-label="Facebook de Mac Chicken"><i class="fab fa-facebook-f" aria-hidden="true"></i></a>
+                <a href="#" aria-label="Instagram de Mac Chicken"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+                <a href="#" aria-label="TikTok de Mac Chicken"><i class="fab fa-tiktok" aria-hidden="true"></i></a>
+                <a href="https://wa.me/51979926808" target="_blank" rel="noopener" aria-label="WhatsApp de Mac Chicken"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+            </div>
         </div>
 
-    <aside id="cart">
-        <div class="cart-header">
-            <h2><i class="fas fa-shopping-cart"></i> Tu Pedido</h2>
-            <button class="close-cart" onclick="toggleCart()">×</button>
-        </div>
-        
-        <div id="cart-items">
-            <p class="empty-msg">Tu carrito está vacío</p>
-        </div>
-        
-        <div class="total-container">
-            <span class="total-label">TOTAL A PAGAR</span>
-            <span class="total-amount">S/ <span id="total">0.00</span></span>
+        <div class="footer-col">
+            <h3>Explora</h3>
+            <ul class="footer-links">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#carta">Carta</a></li>
+                <li><a href="#pedidos">Delivery y reservas</a></li>
+                <li><a href="#ubicacion">Ubicación</a></li>
+                <li><button type="button" class="link-btn" data-action="open-track">Seguir mi pedido</button></li>
+            </ul>
         </div>
 
-        <div class="user-data">
-            <input type="text" placeholder="Tu Nombre" id="name" oninput="update()">
-            <input type="text" placeholder="Tu Dirección" id="location" oninput="update()">
+        <div class="footer-col">
+            <h3>Contacto</h3>
+            <ul class="footer-links">
+                <li><a href="https://wa.me/51979926808" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> WhatsApp</a></li>
+                <li><a href="tel:+51979926808"><i class="fas fa-phone" aria-hidden="true"></i> +51 979 926 808</a></li>
+                <li><button type="button" class="link-btn" data-action="open-reserva"><i class="fas fa-calendar-check" aria-hidden="true"></i> Reservar mesa</button></li>
+            </ul>
         </div>
 
-        <a id="whatsapp" class="whatsapp disabled" onclick="checkOrder()">
-            <i class="fab fa-whatsapp"></i> PEDIR POR WHATSAPP
-        </a>
-    </aside>
-</div>
+        <div class="footer-col">
+            <h3>Horarios de atención</h3>
+            <!-- 🔴 DINÁMICO: misma lista de horarios (renderHorarios()) -->
+            <ul class="hours-list hours-dark" data-horarios>
+                <li><span>Lunes</span><span>Cerrado</span></li>
+                <li><span>Martes a domingo</span><span>Consulta el horario</span></li>
+            </ul>
+        </div>
 
-<div id="overlay" onclick="toggleCart()"></div>
+        <div class="footer-col">
+            <h3>Dirección</h3>
+            <p>Km 4.5 Carretera Pimentel<br>(Cruce Colegio Algarrobos)<br>Chiclayo, Lambayeque</p>
+            <a class="footer-map-link" href="#ubicacion">Ver en el mapa</a>
+        </div>
+    </div>
 
-<footer>
-    <p><strong>Ubicación:</strong> Km 4.5 Carretera Pimentel (Cruce Colegio Algarrobos)</p>
-    <p><strong>Atención:</strong> Martes a Domingos</p>
-    <p>&copy; 2026 Mac Chicken - Todos los derechos reservados.</p>
+    <div class="footer-bottom">
+        <div class="wrap">
+            <p>&copy; 2026 Mac Chicken. Todos los derechos reservados.</p>
+        </div>
+    </div>
 </footer>
 
-<script src="script.js"></script>
+<!-- Barra flotante del pedido (solo móvil/tablet) -->
+<button type="button" class="cart-bar" id="cart-bar" data-action="open-cart" aria-label="Ver mi pedido">
+    <span data-cart-summary>0 platos</span>
+    <span class="cart-bar-total" data-cart-total-text>S/ 0.00</span>
+    <span class="cart-bar-cta">Ver pedido</span>
+</button>
+
+<!-- =====================================================
+     PEDIDO (panel lateral)
+     ===================================================== -->
+<div class="overlay" id="overlay" data-action="close-cart"></div>
+
+<aside class="cart is-empty" id="cart" role="dialog" aria-modal="true" aria-labelledby="cart-title" aria-hidden="true">
+    <div class="cart-head">
+        <h2 id="cart-title">Tu pedido</h2>
+        <button type="button" class="round-btn" data-action="close-cart" aria-label="Cerrar mi pedido"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+    </div>
+
+    <div class="cart-body">
+        <p class="cart-note" id="cart-closed-note" hidden>
+            <i class="fas fa-circle-info" aria-hidden="true"></i>
+            Ahora estamos cerrados. Puedes enviar tu pedido y lo atendemos apenas abramos.
+        </p>
+
+        <!-- Lista del pedido (la dibuja renderCart() en script.js) -->
+        <div id="cart-items"></div>
+
+        <div class="cart-totals">
+            <div><span>Subtotal</span><span id="cart-subtotal">S/ 0.00</span></div>
+            <div id="cart-envio-row" hidden><span>Delivery</span><span id="cart-envio">S/ 0.00</span></div>
+            <div class="cart-total-row"><span>Total a pagar</span><span class="cart-total-amount" id="cart-total">S/ 0.00</span></div>
+        </div>
+
+        <form class="cart-fields" id="cart-form" novalidate>
+            <div class="seg" role="radiogroup" aria-label="Tipo de pedido">
+                <input type="radio" name="tipo" id="tipo-delivery" value="delivery" class="visually-hidden" checked>
+                <label for="tipo-delivery"><i class="fas fa-motorcycle" aria-hidden="true"></i> Delivery</label>
+                <input type="radio" name="tipo" id="tipo-recojo" value="recojo" class="visually-hidden">
+                <label for="tipo-recojo"><i class="fas fa-store" aria-hidden="true"></i> Recojo en local</label>
+            </div>
+
+            <div class="field">
+                <label for="c-nombre">Tu nombre</label>
+                <input class="input" type="text" id="c-nombre" autocomplete="name" placeholder="Ej. María Pérez">
+            </div>
+
+            <div class="field" id="field-direccion">
+                <label for="c-direccion">Dirección de entrega</label>
+                <input class="input" type="text" id="c-direccion" autocomplete="street-address" placeholder="Calle, número y referencia">
+            </div>
+
+            <div class="field">
+                <label for="c-notas">Indicaciones (opcional)</label>
+                <textarea class="input" id="c-notas" rows="2" placeholder="Ej. sin ensalada, más cremas"></textarea>
+            </div>
+
+            <div class="field">
+                <span class="legend">Forma de pago</span>
+                <div class="seg" role="radiogroup" aria-label="Forma de pago">
+                    <input type="radio" name="pago" id="pago-efectivo" value="Efectivo" class="visually-hidden" checked>
+                    <label for="pago-efectivo">Efectivo</label>
+                    <input type="radio" name="pago" id="pago-yape" value="Yape" class="visually-hidden">
+                    <label for="pago-yape">Yape</label>
+                    <input type="radio" name="pago" id="pago-plin" value="Plin" class="visually-hidden">
+                    <label for="pago-plin">Plin</label>
+                </div>
+            </div>
+
+            <p class="error-msg" id="cart-error" role="alert" hidden></p>
+
+            <button type="submit" class="btn btn-wa btn-block" id="btn-enviar">
+                <i class="fab fa-whatsapp" aria-hidden="true"></i> Enviar pedido por WhatsApp
+            </button>
+        </form>
+    </div>
+</aside>
+
+<!-- =====================================================
+     MODAL: RESERVA DE MESA
+     ===================================================== -->
+<dialog class="modal" id="modal-reserva" aria-labelledby="reserva-title">
+    <div class="modal-head">
+        <div>
+            <h2 id="reserva-title">Reserva tu mesa</h2>
+            <p>Completa tus datos y te confirmamos por WhatsApp.</p>
+        </div>
+        <button type="button" class="round-btn" data-action="close-modal" aria-label="Cerrar"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+    </div>
+
+    <!-- 🔴 DINÁMICO (opcional): al enviar, script.js llama registrarReserva().
+         Luego: POST api/reservas.php → tabla `reservas`. -->
+    <form class="modal-body" id="reserva-form" novalidate>
+        <div class="form-row two">
+            <div class="field">
+                <label for="r-nombre">Nombre</label>
+                <input class="input" type="text" id="r-nombre" autocomplete="name" required>
+            </div>
+            <div class="field">
+                <label for="r-tel">Celular</label>
+                <input class="input" type="tel" id="r-tel" autocomplete="tel" inputmode="tel" placeholder="9XX XXX XXX" required>
+            </div>
+        </div>
+
+        <div class="form-row two">
+            <div class="field">
+                <label for="r-fecha">Fecha</label>
+                <input class="input" type="date" id="r-fecha" required>
+            </div>
+            <div class="field">
+                <label for="r-hora">Hora</label>
+                <select class="input" id="r-hora" required disabled>
+                    <option value="">Elige primero la fecha</option>
+                </select>
+            </div>
+        </div>
+        <p class="hint" id="r-msg" role="status"></p>
+
+        <div class="field">
+            <label for="r-personas">Número de personas</label>
+            <select class="input" id="r-personas" required></select>
+            <span class="hint">Para grupos de más de 12 personas, escríbenos por WhatsApp.</span>
+        </div>
+
+        <div class="field">
+            <label for="r-notas">Comentarios (opcional)</label>
+            <textarea class="input" id="r-notas" rows="2" placeholder="Ej. cumpleaños, silla para bebé"></textarea>
+        </div>
+
+        <p class="error-msg" id="r-error" role="alert" hidden></p>
+
+        <button type="submit" class="btn btn-wa btn-block"><i class="fab fa-whatsapp" aria-hidden="true"></i> Reservar por WhatsApp</button>
+    </form>
+</dialog>
+
+<!-- =====================================================
+     MODAL: SEGUIMIENTO DE PEDIDO
+     ===================================================== -->
+<dialog class="modal" id="modal-track" aria-labelledby="track-title">
+    <div class="modal-head">
+        <div>
+            <h2 id="track-title">Seguir mi pedido</h2>
+            <p>Ingresa el código de tu pedido. Lo ves en tu mensaje de WhatsApp.</p>
+        </div>
+        <button type="button" class="round-btn" data-action="close-modal" aria-label="Cerrar"><i class="fas fa-xmark" aria-hidden="true"></i></button>
+    </div>
+
+    <div class="modal-body">
+        <form id="track-form" novalidate>
+            <div class="field">
+                <label for="t-codigo">Código del pedido</label>
+                <div class="inline-form">
+                    <input class="input" type="text" id="t-codigo" placeholder="MC-1001" autocomplete="off" autocapitalize="characters" spellcheck="false">
+                    <button type="submit" class="btn btn-dark">Consultar</button>
+                </div>
+                <!-- BORRAR esta línea cuando conectes la base de datos (son códigos de prueba) -->
+                <span class="hint" data-demo>Para probar el diseño: MC-1001, MC-1002 o MC-1003.</span>
+            </div>
+            <button type="button" class="link-btn track-last" id="track-last" hidden></button>
+        </form>
+
+        <!-- ======================================================
+             🔴 DINÁMICO (PHP/MySQL): SEGUIMIENTO DE PEDIDO
+             script.js dibuja aquí la línea de tiempo (renderPedido()).
+             Luego: buscarPedido(codigo) → fetch('api/pedido.php?codigo=...').
+             Mientras el modal está abierto se vuelve a consultar cada 30 s.
+             ====================================================== -->
+        <div id="track-result" aria-live="polite"></div>
+    </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<noscript>
+    <p style="position:fixed;bottom:0;left:0;right:0;padding:1rem;background:#1a1a1a;color:#fff;text-align:center;z-index:999">
+        Activa JavaScript para ver la carta y hacer tu pedido. También puedes escribirnos por WhatsApp al +51 979 926 808.
+    </p>
+</noscript>
+
+<script src="script.js" defer></script>
 </body>
 </html>
