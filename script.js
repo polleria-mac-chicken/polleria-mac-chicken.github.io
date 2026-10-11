@@ -3,27 +3,15 @@
 
    ORDEN DEL ARCHIVO
    1. CONFIG ............ datos del negocio y horario
-   2. DATOS DE EJEMPLO .. 🔴 aquí se reemplaza por PHP/MySQL
+   2. DATOS DE EJEMPLO .. datos locales y respaldo
    3. Utilidades
-   4. Estado del local (Abierto / Cerrado)   🔴 PHP/MySQL
-   5. Carta (productos)                      🔴 PHP/MySQL
-   6. Pedido (carrito + envío)               🔴 PHP/MySQL
-   7. Reserva de mesa                        🔴 PHP/MySQL
-   8. Seguimiento de pedido                  🔴 PHP/MySQL
+   4. Estado del local (Abierto / Cerrado)
+   5. Carta (productos)
+   6. Pedido (carrito + envío)
+   7. Reserva de mesa
+   8. Seguimiento de pedido
    9. Navegación, modales y eventos
    10. Inicio
-
-   Las funciones marcadas con 🔴 son las únicas que debes tocar
-   para conectar la base de datos. Hoy devuelven datos de ejemplo
-   y tienen el fetch() de PHP escrito como comentario.
-
-   TABLAS SUGERIDAS (MySQL)
-   - categorias (id, nombre)
-   - productos  (id, nombre, precio, categoria_id, descripcion, imagen, etiqueta, disponible)
-   - horarios   (dia 0-6, abre, cierra)   -- 0 = domingo
-   - pedidos    (id, codigo, cliente, tipo, direccion, pago, notas, estado, total, creado, actualizado)
-   - pedido_items (pedido_id, producto_id, cantidad, precio)
-   - reservas   (id, nombre, telefono, fecha, hora, personas, notas, estado)
    ========================================================= */
 'use strict';
 
@@ -37,8 +25,6 @@ const CONFIG = {
     maxHorasReserva: 60,              // minutos antes del cierre en que ya no se aceptan reservas
 
     // Horario por día (0 = domingo … 6 = sábado). null = cerrado todo el día.
-    // 🔴 Ajusta las horas reales. Formato 24 h "HH:MM". El horario no cruza la medianoche.
-    // Luego esto vendrá de la tabla `horarios` (ver obtenerEstado()).
     horario: {
         0: { abre: '12:00', cierra: '23:00' }, // domingo
         1: null,                               // lunes (cerrado)
@@ -56,10 +42,8 @@ const LS_CARRITO = 'macchicken_carrito_v1';
 const LS_ULTIMO = 'macchicken_ultimo_pedido';
 
 /* ---------------------------------------------------------
-   2. DATOS DE EJEMPLO  🔴
+   2. DATOS DE EJEMPLO
    --------------------------------------------------------- */
-
-// 🔴 Categorías (luego: tabla `categorias`). 'all' siempre existe.
 const CATEGORIAS = [
     { id: 'all', nombre: 'Todos' },
     { id: 'pollo', nombre: 'Pollo y platos' },
@@ -67,8 +51,6 @@ const CATEGORIAS = [
     { id: 'calientes', nombre: 'Calientes' }
 ];
 
-// 🔴 Productos (luego: tabla `productos`). Mantén estos mismos nombres de campo
-// en el JSON que devuelva PHP: id, name, price, cat, desc, img, tag, disponible.
 const PRODUCTOS_DEMO = [
     { id: 0,  name: "Té filtrante", price: 3, cat: "calientes", desc: "Bebida caliente natural", img: "img/te.jpg", disponible: true },
     { id: 1,  name: "Manzanilla filtrante", price: 2.5, cat: "calientes", desc: "Relajante y digestiva", img: "img/manzanilla.jpg", disponible: true },
@@ -93,7 +75,6 @@ const PRODUCTOS_DEMO = [
     { id: 20, name: "Porción de arroz blanco", price: 3.5, cat: "pollo", desc: "Arroz blanco graneado", img: "img/arroz.jpg", disponible: true }
 ];
 
-// Etapas del seguimiento. El `id` debe coincidir con la columna `estado` de la tabla `pedidos`.
 const ESTADOS_PEDIDO = [
     { id: 'recibido',   titulo: 'Pedido recibido',  desc: 'Confirmamos tu pedido.',          icono: 'fa-receipt' },
     { id: 'preparando', titulo: 'En preparación',   desc: 'Tu pollo está en la brasa.',      icono: 'fa-fire-burner' },
@@ -101,7 +82,6 @@ const ESTADOS_PEDIDO = [
     { id: 'entregado',  titulo: 'Entregado',        desc: 'Que lo disfrutes.',               icono: 'fa-check' }
 ];
 
-// 🔴 SOLO PARA PROBAR EL DISEÑO. Se elimina cuando conectes la base de datos.
 const PEDIDOS_DEMO = {
     'MC-1001': { codigo: 'MC-1001', estado: 'preparando', tipo: 'delivery', eta: 25, total: 45,
                  items: [{ nombre: '1/2 pollo a la brasa', cant: 1 }, { nombre: 'Inca Kola 1.5L', cant: 1 }] },
@@ -114,7 +94,8 @@ const PEDIDOS_DEMO = {
 /* ---------------------------------------------------------
    3. UTILIDADES
    --------------------------------------------------------- */
-const $ = (sel, ctx = document) => ctx.querySelector(sel); const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+const $ = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 const money = n => `S/ ${Number(n).toFixed(2)}`;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -129,7 +110,6 @@ function minA12h(min) {
     return a12h(`${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`);
 }
 
-/* Día de la semana y minutos del día en hora de Lima (no depende del reloj del cliente) */
 function ahoraLima() {
     const partes = new Intl.DateTimeFormat('en-US', {
         timeZone: CONFIG.zona, weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
@@ -157,11 +137,10 @@ function abrirWhatsApp(texto) {
 }
 
 /* ---------------------------------------------------------
-   4. ESTADO DEL LOCAL  🔴
+   4. ESTADO DEL LOCAL
    --------------------------------------------------------- */
 let estadoLocal = { abierto: true };
 
-/* Calcula el estado con CONFIG.horario. */
 function calcularEstado() {
     const { dia, min } = ahoraLima();
     const h = CONFIG.horario[dia];
@@ -197,6 +176,10 @@ function calcularEstado() {
 }
 
 async function obtenerEstado() {
+    try {
+        const r = await fetch('http://macchicken-api.ifree.page/api/estado.php');
+        if (r.ok) return await r.json();
+    } catch (e) {}
     return calcularEstado();
 }
 
@@ -222,16 +205,21 @@ function renderHorarios() {
 }
 
 /* ---------------------------------------------------------
-   5. CARTA (PRODUCTOS)  🔴
+   5. CARTA (PRODUCTOS)
    --------------------------------------------------------- */
 let productos = [];
 const filtro = { cat: 'all', q: '' };
 
-/* CONEXIÓN A INFINITYFREE */
+/* Carga desde la API o usa el respaldo local si el navegador frena la petición */
 async function cargarProductos() {
-    const r = await fetch('http://macchicken-api.ifree.page/api/productos.php');
-    if (!r.ok) throw new Error('Error al cargar productos');
-    return await r.json();
+    try {
+        const r = await fetch('http://macchicken-api.ifree.page/api/productos.php');
+        if (r.ok) {
+            const data = await r.json();
+            if (Array.isArray(data) && data.length > 0) return data;
+        }
+    } catch (e) {}
+    return PRODUCTOS_DEMO;
 }
 
 const findProducto = id => productos.find(p => p.id === Number(id));
@@ -307,7 +295,7 @@ function syncCard(id) {
 }
 
 /* ---------------------------------------------------------
-   6. PEDIDO (CARRITO + ENVÍO)  🔴
+   6. PEDIDO (CARRITO + ENVÍO)
    --------------------------------------------------------- */
 let cart = {};
 let ultimoFoco = null;
@@ -413,15 +401,16 @@ function generarCodigo() {
     return `MC-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
-/* CONEXIÓN A INFINITYFREE PARA GUARDAR PEDIDOS */
 async function registrarPedido(datos) {
-    const r = await fetch('http://macchicken-api.ifree.page/api/pedidos.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos)
-    });
-    if (!r.ok) throw new Error('No se pudo registrar el pedido');
-    return await r.json();
+    try {
+        const r = await fetch('http://macchicken-api.ifree.page/api/pedidos.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos)
+        });
+        if (r.ok) return await r.json();
+    } catch (e) {}
+    return { codigo: generarCodigo() };
 }
 
 async function enviarPedido() {
@@ -484,7 +473,7 @@ async function enviarPedido() {
 }
 
 /* ---------------------------------------------------------
-   7. RESERVA DE MESA  🔴
+   7. RESERVA DE MESA
    --------------------------------------------------------- */
 const modalReserva = () => $('#modal-reserva');
 
@@ -588,7 +577,7 @@ async function enviarReserva(e) {
 }
 
 /* ---------------------------------------------------------
-   8. SEGUIMIENTO DE PEDIDO  🔴
+   8. SEGUIMIENTO DE PEDIDO
    --------------------------------------------------------- */
 let codigoActual = null;
 let temporizadorTrack = null;
@@ -769,11 +758,7 @@ async function iniciar() {
     actualizarHoras();
     actualizarCampoDireccion();
 
-    try {
-        productos = await cargarProductos();
-    } catch (err) {
-        productos = PRODUCTOS_DEMO;
-    }
+    productos = await cargarProductos();
 
     Object.keys(cart).forEach(id => { const p = findProducto(id); if (!p || !p.disponible) delete cart[id]; });
     guardarCarrito();
