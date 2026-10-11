@@ -114,8 +114,7 @@ const PEDIDOS_DEMO = {
 /* ---------------------------------------------------------
    3. UTILIDADES
    --------------------------------------------------------- */
-const $ = (sel, ctx = document) => ctx.querySelector(sel);
-const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+const $ = (sel, ctx = document) => ctx.querySelector(sel); const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 const money = n => `S/ ${Number(n).toFixed(2)}`;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -197,15 +196,6 @@ function calcularEstado() {
     return { abierto: false, detalle: 'Por ahora no tenemos horario de atención.' };
 }
 
-/* 🔴 CONEXIÓN PHP/MySQL
-   Para que el dueño pueda abrir/cerrar el local a mano o cambiar horarios desde un panel,
-   reemplaza el cuerpo por:
-
-     const r = await fetch('api/estado.php');
-     const d = await r.json();
-     // api/estado.php debe responder: { "abierto": true, "cierraPronto": false, "detalle": "Atendemos hasta las 11:00 p. m." }
-     return d;
-*/
 async function obtenerEstado() {
     return calcularEstado();
 }
@@ -213,19 +203,14 @@ async function obtenerEstado() {
 function pintarEstado(e) {
     estadoLocal = e;
     const clave = !e.abierto ? 'cerrado' : e.cierraPronto ? 'pronto' : 'abierto';
-    $$('[data-estado]').forEach(el => { el.dataset.estado = clave; });
-    $$('[data-estado-label]').forEach(el => { el.textContent = e.abierto ? 'Abierto' : 'Cerrado'; });
-    $$('[data-estado-extra]').forEach(el => { el.textContent = e.abierto ? ' ahora' : ''; });
-    $$('[data-estado-detalle]').forEach(el => { el.textContent = e.detalle || ''; });
-    $('#cart-closed-note').hidden = e.abierto;
+    $$('[data-estado]').forEach(el => { el.dataset.estado = clave; });$$('[data-estado-label]').forEach(el => { el.textContent = e.abierto ? 'Abierto' : 'Cerrado'; });     $$('[data-estado-extra]').forEach(el => { el.textContent = e.abierto ? ' ahora' : ''; });     $$('[data-estado-detalle]').forEach(el => { el.textContent = e.detalle \vert{}\vert{} ''; });$('#cart-closed-note').hidden = e.abierto;
 }
 
 async function refrescarEstado() {
     try { pintarEstado(await obtenerEstado()); }
-    catch (err) { pintarEstado(calcularEstado()); } // si falla la API, se usa el horario local
+    catch (err) { pintarEstado(calcularEstado()); }
 }
 
-/* 🔴 Lista de horarios (footer y sección Ubicación). Luego: datos de la tabla `horarios`. */
 function renderHorarios() {
     const hoy = ahoraLima().dia;
     const html = ORDEN_DIAS.map(d => {
@@ -242,14 +227,11 @@ function renderHorarios() {
 let productos = [];
 const filtro = { cat: 'all', q: '' };
 
-/* 🔴 CONEXIÓN PHP/MySQL
-   Reemplaza el cuerpo por:
-
-     const r = await fetch('api/productos.php');
-     return await r.json();   // arreglo de { id, name, price, cat, desc, img, tag, disponible }
-*/
+/* CONEXIÓN A INFINITYFREE */
 async function cargarProductos() {
-    return PRODUCTOS_DEMO;
+    const r = await fetch('http://macchicken-api.ifree.page/api/productos.php');
+    if (!r.ok) throw new Error('Error al cargar productos');
+    return await r.json();
 }
 
 const findProducto = id => productos.find(p => p.id === Number(id));
@@ -278,7 +260,6 @@ function stepperHTML(id, qty, nombre, clase = '') {
             </div>`;
 }
 
-/* Estructura de cada plato. Si cambias el diseño de la tarjeta, hazlo aquí y en .card (CSS). */
 function cardHTML(p) {
     return `
     <article class="card" data-id="${p.id}">
@@ -319,7 +300,6 @@ function renderMenu() {
     }
 }
 
-/* Actualiza solo el control (Agregar / +−) de una tarjeta, sin redibujar toda la carta */
 function syncCard(id) {
     const card = $(`.card[data-id="${id}"]`);
     const p = findProducto(id);
@@ -329,7 +309,7 @@ function syncCard(id) {
 /* ---------------------------------------------------------
    6. PEDIDO (CARRITO + ENVÍO)  🔴
    --------------------------------------------------------- */
-let cart = {};            // { idProducto: cantidad }
+let cart = {};
 let ultimoFoco = null;
 
 function cargarCarrito() {
@@ -337,7 +317,7 @@ function cargarCarrito() {
     catch (e) { return {}; }
 }
 function guardarCarrito() {
-    try { localStorage.setItem(LS_CARRITO, JSON.stringify(cart)); } catch (e) { /* modo privado: se ignora */ }
+    try { localStorage.setItem(LS_CARRITO, JSON.stringify(cart)); } catch (e) {}
 }
 
 function setQty(id, q) {
@@ -376,8 +356,7 @@ function renderCart() {
                     <span class="line-name">${esc(p.name)}</span>
                     <span class="line-unit">${money(p.price)} c/u</span>
                 </div>
-                <span class="line-total">${money(p.price * q)}</span>
-                ${stepperHTML(p.id, q, p.name, 'stepper-sm')}
+                <span class="line-total">${money(p.price * q)}</span>${stepperHTML(p.id, q, p.name, 'stepper-sm')}
             </li>`).join('')}</ul>`
         : `<div class="cart-empty">
                <i class="fas fa-bag-shopping" aria-hidden="true"></i>
@@ -388,10 +367,7 @@ function renderCart() {
     $('#cart-subtotal').textContent = money(subtotal);
     $('#cart-envio').textContent = money(envio);
     $('#cart-envio-row').hidden = !(envio > 0);
-    $('#cart-total').textContent = money(total);
-
-    $$('[data-cart-count]').forEach(el => { el.textContent = cantidad; el.hidden = cantidad === 0; });
-    $('[data-cart-summary]').textContent = `${cantidad} ${cantidad === 1 ? 'plato' : 'platos'}`;
+    $('#cart-total').textContent = money(total);      $$('[data-cart-count]').forEach(el => { el.textContent = cantidad; el.hidden = cantidad === 0; });$('[data-cart-summary]').textContent = `${cantidad} ${cantidad === 1 ? 'plato' : 'platos'}`;
     $('[data-cart-total-text]').textContent = money(total);
     $('#cart-bar').classList.toggle('is-visible', cantidad > 0 && !$('#cart').classList.contains('is-open'));
 }
@@ -425,10 +401,7 @@ function cerrarCart() {
 }
 
 function mostrarErrorPedido(msg, selector) {
-    const err = $('#cart-error');
-    err.textContent = msg;
-    err.hidden = false;
-    $$('#cart-form .input').forEach(i => i.removeAttribute('aria-invalid'));
+    const err = $('#cart-error');     err.textContent = msg;     err.hidden = false;     $$('#cart-form .input').forEach(i => i.removeAttribute('aria-invalid'));
     if (selector) {
         const campo = $(selector);
         campo.setAttribute('aria-invalid', 'true');
@@ -440,21 +413,15 @@ function generarCodigo() {
     return `MC-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
-/* 🔴 CONEXIÓN PHP/MySQL
-   Guardar el pedido en la base de datos y recibir el código real:
-
-     const r = await fetch('api/pedidos.php', {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(datos)   // { cliente, tipo, direccion, pago, notas, items:[{id, cant}], total }
-     });
-     if (!r.ok) throw new Error('No se pudo registrar el pedido');
-     return await r.json();            // debe responder { "codigo": "MC-1234" }
-
-   Importante: en PHP recalcula el total con los precios de la tabla `productos`;
-   no confíes en el total que envía el navegador. */
+/* CONEXIÓN A INFINITYFREE PARA GUARDAR PEDIDOS */
 async function registrarPedido(datos) {
-    return { codigo: generarCodigo() };
+    const r = await fetch('http://macchicken-api.ifree.page/api/pedidos.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+    });
+    if (!r.ok) throw new Error('No se pudo registrar el pedido');
+    return await r.json();
 }
 
 async function enviarPedido() {
@@ -502,7 +469,7 @@ async function enviarPedido() {
 
         abrirWhatsApp(msg);
 
-        try { localStorage.setItem(LS_ULTIMO, codigo); } catch (e) { /* se ignora */ }
+        try { localStorage.setItem(LS_ULTIMO, codigo); } catch (e) {}
         cart = {};
         guardarCarrito();
         renderMenu();
@@ -551,7 +518,7 @@ function actualizarHoras() {
         return;
     }
 
-    const minAhora = ahoraLima().min + 30; // margen para reservas de hoy
+    const minAhora = ahoraLima().min + 30;
     const esHoy = fecha === hoyISO();
     const opciones = [];
     for (let m = toMin(h.abre); m <= toMin(h.cierra) - CONFIG.maxHorasReserva; m += 30) {
@@ -570,17 +537,6 @@ function actualizarHoras() {
     sel.disabled = false;
 }
 
-/* 🔴 CONEXIÓN PHP/MySQL (opcional)
-   Guardar la reserva en la base de datos:
-
-     const r = await fetch('api/reservas.php', {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(datos)  // { nombre, telefono, fecha, hora, personas, notas }
-     });
-     if (!r.ok) throw new Error('No se pudo registrar la reserva');
-     return await r.json();
-*/
 async function registrarReserva(datos) {
     return { ok: true };
 }
@@ -644,26 +600,6 @@ function normalizarCodigo(v) {
     return v;
 }
 
-/* 🔴 CONEXIÓN PHP/MySQL
-   Reemplaza el cuerpo por:
-
-     const r = await fetch('api/pedido.php?codigo=' + encodeURIComponent(codigo));
-     if (r.status === 404) return null;
-     if (!r.ok) throw new Error('Error de servidor');
-     return await r.json();
-
-   api/pedido.php debe responder exactamente con esta forma:
-     {
-       "codigo": "MC-1001",
-       "estado": "preparando",        // recibido | preparando | en_camino | entregado
-       "tipo": "delivery",            // delivery | recojo
-       "eta": 25,                     // minutos estimados (0 o null si no aplica)
-       "total": 45.00,
-       "actualizado": "2026-10-09T18:30:00-05:00",
-       "items": [ { "nombre": "1/2 pollo a la brasa", "cant": 1 } ]
-     }
-   Para que el estado cambie "en vivo", basta con que el local actualice la columna
-   `estado` en MySQL: esta pantalla vuelve a consultar cada 30 segundos. */
 async function buscarPedido(codigo) {
     await pausa(350);
     const p = PEDIDOS_DEMO[codigo];
@@ -764,13 +700,7 @@ function cerrarNav() {
 
 function alternarNav() {
     const abierto = $('#main-nav').classList.toggle('is-open');
-    const b = $('#burger');
-    b.setAttribute('aria-expanded', String(abierto));
-    b.setAttribute('aria-label', abierto ? 'Cerrar menú' : 'Abrir menú');
-}
-
-function atraparFoco(e) {
-    const f = $$('button:not([disabled]), a[href], input:not([disabled]), textarea, select', $('#cart'))
+    const b = $('#burger');     b.setAttribute('aria-expanded', String(abierto));     b.setAttribute('aria-label', abierto ? 'Cerrar menú' : 'Abrir menú'); }  function atraparFoco(e) {     const f = $$('button:not([disabled]), a[href], input:not([disabled]), textarea, select',$('#cart'))
         .filter(el => el.offsetParent !== null);
     if (!f.length) return;
     const primero = f[0], ultimo = f[f.length - 1];
@@ -779,7 +709,6 @@ function atraparFoco(e) {
 }
 
 function registrarEventos() {
-    /* Acciones por data-action (carta, pedido, modales, menú) */
     document.addEventListener('click', e => {
         const el = e.target.closest('[data-action]');
         if (!el) return;
@@ -801,58 +730,30 @@ function registrarEventos() {
         }
     });
 
-    /* Menú móvil: se cierra al tocar un enlace */
     $('#main-nav').addEventListener('click', e => { if (e.target.closest('a')) cerrarNav(); });
 
-    /* Filtros de la carta */
-    $('#chips').addEventListener('click', e => {
-        const chip = e.target.closest('.chip');
-        if (!chip) return;
-        filtro.cat = chip.dataset.cat;
-        $$('.chip').forEach(c => c.setAttribute('aria-pressed', String(c === chip)));
+    $('#chips').addEventListener('click', e => {         const chip = e.target.closest('.chip');         if (!chip) return;         filtro.cat = chip.dataset.cat;         $$('.chip').forEach(c => c.setAttribute('aria-pressed', String(c === chip)));
         renderMenu();
     });
     $('#search').addEventListener('input', e => { filtro.q = e.target.value; renderMenu(); });
 
-    /* Pedido */
-    $('#cart-form').addEventListener('submit', e => { e.preventDefault(); enviarPedido(); });
-    $$('input[name="tipo"]').forEach(r => r.addEventListener('change', () => { actualizarCampoDireccion(); renderCart(); }));
+    $('#cart-form').addEventListener('submit', e => { e.preventDefault(); enviarPedido(); });     $$('input[name="tipo"]').forEach(r => r.addEventListener('change', () => { actualizarCampoDireccion(); renderCart(); }));
     $('#cart-form').addEventListener('input', () => { $('#cart-error').hidden = true; });
 
-    /* Reserva */
     $('#r-fecha').addEventListener('change', actualizarHoras);
     $('#reserva-form').addEventListener('submit', enviarReserva);
 
-    /* Seguimiento */
     $('#track-form').addEventListener('submit', e => { e.preventDefault(); consultarPedido($('#t-codigo').value); });
     $('#track-last').addEventListener('click', e => {
         const c = e.currentTarget.dataset.codigo;
         $('#t-codigo').value = c;
         consultarPedido(c);
     });
-    $('#modal-track').addEventListener('close', () => { clearInterval(temporizadorTrack); codigoActual = null; });
+    $('#modal-track').addEventListener('close', () => { clearInterval(temporizadorTrack); codigoActual = null; });      $$('.modal').forEach(dlg => dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); }));
 
-    /* Cerrar modales al tocar el fondo */
-    $$('.modal').forEach(dlg => dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); }));
-
-    /* Teclado */
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') { cerrarCart(); cerrarNav(); }
-        if (e.key === 'Tab' && $('#cart').classList.contains('is-open')) atraparFoco(e);
-    });
-
-    /* Si se agranda la pantalla, cerrar el menú móvil */
-    window.matchMedia('(min-width: 900px)').addEventListener('change', cerrarNav);
-
-    /* Imagen de respaldo si una foto no carga */
-    document.addEventListener('error', e => {
-        const img = e.target;
-        if (img.tagName === 'IMG' && img.closest('.card-media, .hero-photo') && !img.dataset.respaldo) {
-            img.dataset.respaldo = '1';
-            img.src = img.closest('.hero-photo') ? IMG_RESPALDO_HERO : IMG_RESPALDO;
-        }
-    }, true);
-    $$('.hero-photo img').forEach(img => {
+        if (e.key === 'Tab' && $('#cart').classList.contains('is-open')) atraparFoco(e);     });      window.matchMedia('(min-width: 900px)').addEventListener('change', cerrarNav);      document.addEventListener('error', e => {         const img = e.target;         if (img.tagName === 'IMG' && img.closest('.card-media, .hero-photo') && !img.dataset.respaldo) {             img.dataset.respaldo = '1';             img.src = img.closest('.hero-photo') ? IMG_RESPALDO_HERO : IMG_RESPALDO;         }     }, true);     $$('.hero-photo img').forEach(img => {
         if (img.complete && img.naturalWidth === 0) { img.dataset.respaldo = '1'; img.src = IMG_RESPALDO_HERO; }
     });
 }
@@ -871,10 +772,9 @@ async function iniciar() {
     try {
         productos = await cargarProductos();
     } catch (err) {
-        productos = PRODUCTOS_DEMO; // si falla la API, se muestra la carta de respaldo
+        productos = PRODUCTOS_DEMO;
     }
 
-    // Quita del pedido guardado los platos que ya no existen o no están disponibles
     Object.keys(cart).forEach(id => { const p = findProducto(id); if (!p || !p.disponible) delete cart[id]; });
     guardarCarrito();
 
@@ -883,7 +783,7 @@ async function iniciar() {
     renderCart();
 
     await refrescarEstado();
-    setInterval(refrescarEstado, 60000); // el estado se revisa cada minuto
+    setInterval(refrescarEstado, 60000);
 }
 
 iniciar();
