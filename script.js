@@ -1,17 +1,5 @@
 /* =========================================================
    MAC CHICKEN — script.js
-
-   ORDEN DEL ARCHIVO
-   1. CONFIG ............ datos del negocio y horario
-   2. DATOS DE EJEMPLO .. datos locales y respaldo
-   3. Utilidades
-   4. Estado del local (Abierto / Cerrado)
-   5. Carta (productos)
-   6. Pedido (carrito + envío)
-   7. Reserva de mesa
-   8. Seguimiento de pedido
-   9. Navegación, modales y eventos
-   10. Inicio
    ========================================================= */
 'use strict';
 
@@ -19,30 +7,29 @@
    1. CONFIG
    --------------------------------------------------------- */
 const CONFIG = {
-    whatsapp: '51979926808',          // número con código de país, sin + ni espacios
-    zona: 'America/Lima',             // la hora del local se calcula siempre en hora de Perú
-    costoDelivery: 0,                 // en soles; si es 0 no se muestra la línea "Delivery"
-    maxHorasReserva: 60,              // minutos antes del cierre en que ya no se aceptan reservas
+    whatsapp: '51979926808',
+    zona: 'America/Lima',
+    costoDelivery: 0,
+    maxHorasReserva: 60,
 
-    // Horario por día (0 = domingo … 6 = sábado). null = cerrado todo el día.
     horario: {
-        0: { abre: '12:00', cierra: '23:00' }, // domingo
-        1: null,                               // lunes (cerrado)
-        2: { abre: '12:00', cierra: '23:00' }, // martes
-        3: { abre: '12:00', cierra: '23:00' }, // miércoles
-        4: { abre: '12:00', cierra: '23:00' }, // jueves
-        5: { abre: '12:00', cierra: '23:00' }, // viernes
-        6: { abre: '12:00', cierra: '23:00' }  // sábado
+        0: { abre: '12:00', cierra: '23:00' },
+        1: null,
+        2: { abre: '12:00', cierra: '23:00' },
+        3: { abre: '12:00', cierra: '23:00' },
+        4: { abre: '12:00', cierra: '23:00' },
+        5: { abre: '12:00', cierra: '23:00' },
+        6: { abre: '12:00', cierra: '23:00' }
     }
 };
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-const ORDEN_DIAS = [1, 2, 3, 4, 5, 6, 0]; // para mostrar de lunes a domingo
+const ORDEN_DIAS = [1, 2, 3, 4, 5, 6, 0];
 const LS_CARRITO = 'macchicken_carrito_v1';
 const LS_ULTIMO = 'macchicken_ultimo_pedido';
 
 /* ---------------------------------------------------------
-   2. DATOS DE EJEMPLO
+   2. DATOS
    --------------------------------------------------------- */
 const CATEGORIAS = [
     { id: 'all', nombre: 'Todos' },
@@ -210,7 +197,6 @@ function renderHorarios() {
 let productos = [];
 const filtro = { cat: 'all', q: '' };
 
-/* Carga desde la API o usa el respaldo local si el navegador frena la petición */
 async function cargarProductos() {
     try {
         const r = await fetch('http://macchicken-api.ifree.page/api/productos.php');
@@ -295,7 +281,7 @@ function syncCard(id) {
 }
 
 /* ---------------------------------------------------------
-   6. PEDIDO (CARRITO + ENVÍO)
+   6. PEDIDO
    --------------------------------------------------------- */
 let cart = {};
 let ultimoFoco = null;
