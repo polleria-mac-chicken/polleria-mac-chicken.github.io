@@ -1,5 +1,3 @@
-script del fronted de mi pagina web 
-
 /* =========================================================
    MAC CHICKEN — script.js
 
