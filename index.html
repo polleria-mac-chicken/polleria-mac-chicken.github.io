@@ -14,8 +14,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <link rel="stylesheet" href="estilos.css">
-    <link rel="icon" href="img/ral.jpg" type="image/jpeg">
-</head>
 </head>
 <body>
 
@@ -71,10 +69,18 @@
     <!-- =====================================================
          INICIO / HERO
          ===================================================== -->
-    <!-- La foto de fondo del hero se cambia en estilos.css (sección 5): background-image: url('img/fondo-pollo.jpg') -->
+    <!-- Carrusel automático de fondo: cambia cada 4 s (ver iniciarCarruselHero() en script.js). Se pausa al pasar el cursor o al tocar la pantalla. -->
     <section class="hero" id="inicio">
+        <div class="hero-carousel" id="hero-carousel" aria-hidden="true">
+            <div class="hero-slide is-active"><img src="img/pollo1.jpg" alt="" loading="eager"></div>
+            <div class="hero-slide"><img src="img/pollo4.jpg" alt="" loading="lazy"></div>
+            <div class="hero-slide"><img src="img/chaufa.jpg" alt="" loading="lazy"></div>
+            <div class="hero-slide"><img src="img/pollo6.jpg" alt="" loading="lazy"></div>
+            <div class="hero-slide"><img src="img/pollo8.jpg" alt="" loading="lazy"></div>
+        </div>
         <div class="wrap hero-inner">
             <div class="hero-copy">
+                <span class="hero-logo">MAC CHICKEN</span>
                 <h1>De la brasa a tu casa</h1>
                 <p class="hero-lead">Pollo a la brasa, chaufa y mollejitas en Pimentel. Arma tu pedido y envíalo por WhatsApp en un par de minutos.</p>
 
@@ -325,9 +331,15 @@
                 <label for="tipo-recojo"><i class="fas fa-store" aria-hidden="true"></i> Recojo en local</label>
             </div>
 
-            <div class="field">
-                <label for="c-nombre">Tu nombre</label>
-                <input class="input" type="text" id="c-nombre" autocomplete="name" placeholder="Ej. María Pérez">
+            <div class="form-row two">
+                <div class="field">
+                    <label for="c-nombre">Tu nombre</label>
+                    <input class="input" type="text" id="c-nombre" autocomplete="name" placeholder="Ej. María Pérez">
+                </div>
+                <div class="field">
+                    <label for="c-telefono">Celular</label>
+                    <input class="input" type="tel" id="c-telefono" autocomplete="tel" inputmode="tel" placeholder="9XX XXX XXX">
+                </div>
             </div>
 
             <div class="field" id="field-direccion">

@@ -36,6 +36,10 @@ const CONFIG = {
     costoDelivery: 0,                 // en soles; si es 0 no se muestra la línea "Delivery"
     maxHorasReserva: 60,              // minutos antes del cierre en que ya no se aceptan reservas
 
+    // 🔴 Backend en InfinityFree (API + base de datos). El frontend sigue en GitHub Pages;
+    // solo este dominio cambia cuando subas la carpeta backend-infinityfree/ a tu hosting.
+    apiBase: 'https://tudominio.great-site.net',
+
     // Horario por día (0 = domingo … 6 = sábado). null = cerrado todo el día.
     // 🔴 Ajusta las horas reales. Formato 24 h "HH:MM". El horario no cruza la medianoche.
     // Luego esto vendrá de la tabla `horarios` (ver obtenerEstado()).
@@ -69,28 +73,30 @@ const CATEGORIAS = [
 
 // 🔴 Productos (luego: tabla `productos`). Mantén estos mismos nombres de campo
 // en el JSON que devuelva PHP: id, name, price, cat, desc, img, tag, disponible.
+// Los ids (1-21) coinciden a propósito con los de la tabla `productos` de script.sql,
+// para que un pedido enviado desde aquí se guarde en el plato correcto en InfinityFree.
 const PRODUCTOS_DEMO = [
-    { id: 0,  name: "Té filtrante", price: 3, cat: "calientes", desc: "Bebida caliente natural", img: "img/te.jpg", disponible: true },
-    { id: 1,  name: "Manzanilla filtrante", price: 2.5, cat: "calientes", desc: "Relajante y digestiva", img: "img/manzanilla.jpg", disponible: true },
-    { id: 2,  name: "1/4 pollo a la brasa", price: 18.5, cat: "pollo", desc: "Con papas, ensalada y cremas", img: "img/pollo3.jpg", tag: "El favorito", disponible: true },
-    { id: 3,  name: "Pollo entero a la brasa", price: 65, cat: "pollo", desc: "Con papas, ensalada y cremas", img: "img/pollo1.jpg", tag: "Para compartir", disponible: true },
-    { id: 4,  name: "1/2 pollo a la brasa", price: 37, cat: "pollo", desc: "Con papas, ensalada y cremas", img: "img/pollo2.jpg", disponible: true },
-    { id: 5,  name: "Agua San Luis 625ml", price: 2, cat: "bebidas", desc: "Agua mineral sin gas", img: "img/sanluis.jpg", disponible: true },
-    { id: 6,  name: "Inca Kola 1.5L", price: 8, cat: "bebidas", desc: "Gaseosa familiar", img: "img/inca.jpg", disponible: true },
-    { id: 7,  name: "Inca Kola 600ml", price: 4, cat: "bebidas", desc: "Gaseosa personal", img: "img/inca3.jpg", disponible: true },
-    { id: 8,  name: "Inca Kola 1L", price: 7, cat: "bebidas", desc: "Gaseosa mediana", img: "img/inca2.jpg", disponible: true },
-    { id: 9,  name: "Pollo a la plancha", price: 18.5, cat: "pollo", desc: "Con papas, ensalada y cremas", img: "img/pollo5.jpg", disponible: true },
-    { id: 10, name: "Coca Cola 600ml", price: 4, cat: "bebidas", desc: "Gaseosa personal", img: "img/coca3.jpg", disponible: true },
-    { id: 11, name: "Coca Cola 1L", price: 7, cat: "bebidas", desc: "Gaseosa mediana", img: "img/coca2.jpg", disponible: true },
-    { id: 12, name: "Coca Cola 1.5L", price: 8, cat: "bebidas", desc: "Gaseosa familiar", img: "img/coca.jpg", disponible: true },
-    { id: 13, name: "Mostrito brasa", price: 22, cat: "pollo", desc: "Arroz chaufa + papas + ensalada", img: "img/pollo4.jpg", tag: "Combo", disponible: true },
-    { id: 14, name: "Arroz chaufa", price: 16, cat: "pollo", desc: "Chaufa con pollo a la brasa", img: "img/chaufa.jpg", disponible: true },
-    { id: 15, name: "Mollejitas fritas", price: 16, cat: "pollo", desc: "Con papas, ensalada y cremas", img: "img/pollo6.jpg", disponible: true },
-    { id: 16, name: "Salchipapa", price: 10, cat: "pollo", desc: "Salchicha + papas fritas", img: "img/pollo7.jpg", disponible: true },
-    { id: 17, name: "Chicharrón de pollo", price: 17.5, cat: "pollo", desc: "Con papas, ensalada y cremas", img: "img/pollo8.jpg", disponible: true },
-    { id: 18, name: "Porción de papas", price: 8, cat: "pollo", desc: "Papas fritas crujientes", img: "img/papas.jpg", disponible: true },
-    { id: 19, name: "Porción de ensalada", price: 6, cat: "pollo", desc: "Ensalada fresca", img: "img/ensa.jpg", disponible: true },
-    { id: 20, name: "Porción de arroz blanco", price: 3.5, cat: "pollo", desc: "Arroz blanco graneado", img: "img/arroz.jpg", disponible: true }
+    { id: 1,  name: "Té filtrante", price: 3, cat: "calientes", desc: "Bebida caliente natural", img: "img/te.jpg", disponible: true },
+    { id: 2,  name: "Manzanilla filtrante", price: 2.5, cat: "calientes", desc: "Relajante y digestiva", img: "img/manzanilla.jpg", disponible: true },
+    { id: 3,  name: "1/4 pollo a la brasa", price: 18.5, cat: "pollo", desc: "Con papas, ensalada y cremas", img: "img/pollo3.jpg", tag: "El favorito", disponible: true },
+    { id: 4,  name: "Pollo entero a la brasa", price: 65, cat: "pollo", desc: "Con papas, ensalada y cremas", img: "img/pollo1.jpg", tag: "Para compartir", disponible: true },
+    { id: 5,  name: "1/2 pollo a la brasa", price: 37, cat: "pollo", desc: "Con papas, ensalada y cremas", img: "img/pollo2.jpg", disponible: true },
+    { id: 6,  name: "Agua San Luis 625ml", price: 2, cat: "bebidas", desc: "Agua mineral sin gas", img: "img/sanluis.jpg", disponible: true },
+    { id: 7,  name: "Inca Kola 1.5L", price: 8, cat: "bebidas", desc: "Gaseosa familiar", img: "img/inca.jpg", disponible: true },
+    { id: 8,  name: "Inca Kola 600ml", price: 4, cat: "bebidas", desc: "Gaseosa personal", img: "img/inca3.jpg", disponible: true },
+    { id: 9,  name: "Inca Kola 1L", price: 7, cat: "bebidas", desc: "Gaseosa mediana", img: "img/inca2.jpg", disponible: true },
+    { id: 10, name: "Pollo a la plancha", price: 18.5, cat: "pollo", desc: "Con papas, ensalada y cremas", img: "img/pollo5.jpg", disponible: true },
+    { id: 11, name: "Coca Cola 600ml", price: 4, cat: "bebidas", desc: "Gaseosa personal", img: "img/coca3.jpg", disponible: true },
+    { id: 12, name: "Coca Cola 1L", price: 7, cat: "bebidas", desc: "Gaseosa mediana", img: "img/coca2.jpg", disponible: true },
+    { id: 13, name: "Coca Cola 1.5L", price: 8, cat: "bebidas", desc: "Gaseosa familiar", img: "img/coca.jpg", disponible: true },
+    { id: 14, name: "Mostrito brasa", price: 22, cat: "pollo", desc: "Arroz chaufa + papas + ensalada", img: "img/pollo4.jpg", tag: "Combo", disponible: true },
+    { id: 15, name: "Arroz chaufa", price: 16, cat: "pollo", desc: "Chaufa con pollo a la brasa", img: "img/chaufa.jpg", disponible: true },
+    { id: 16, name: "Mollejitas fritas", price: 16, cat: "pollo", desc: "Con papas, ensalada y cremas", img: "img/pollo6.jpg", disponible: true },
+    { id: 17, name: "Salchipapa", price: 10, cat: "pollo", desc: "Salchicha + papas fritas", img: "img/pollo7.jpg", disponible: true },
+    { id: 18, name: "Chicharrón de pollo", price: 17.5, cat: "pollo", desc: "Con papas, ensalada y cremas", img: "img/pollo8.jpg", disponible: true },
+    { id: 19, name: "Porción de papas", price: 8, cat: "pollo", desc: "Papas fritas crujientes", img: "img/papas.jpg", disponible: true },
+    { id: 20, name: "Porción de ensalada", price: 6, cat: "pollo", desc: "Ensalada fresca", img: "img/ensa.jpg", disponible: true },
+    { id: 21, name: "Porción de arroz blanco", price: 3.5, cat: "pollo", desc: "Arroz blanco graneado", img: "img/arroz.jpg", disponible: true }
 ];
 
 // Etapas del seguimiento. El `id` debe coincidir con la columna `estado` de la tabla `pedidos`.
@@ -440,80 +446,83 @@ function generarCodigo() {
     return `MC-${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
-/* 🔴 CONEXIÓN PHP/MySQL
-   Guardar el pedido en la base de datos y recibir el código real:
+/* Guarda una copia del pedido en MySQL (InfinityFree) vía fetch, en segundo plano.
+   El total real y el id definitivo los calcula api/pedidos.php con los precios de
+   la tabla `productos`, nunca lo que mande el navegador.
 
-     const r = await fetch('api/pedidos.php', {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(datos)   // { cliente, tipo, direccion, pago, notas, items:[{id, cant}], total }
-     });
-     if (!r.ok) throw new Error('No se pudo registrar el pedido');
-     return await r.json();            // debe responder { "codigo": "MC-1234" }
-
-   Importante: en PHP recalcula el total con los precios de la tabla `productos`;
-   no confíes en el total que envía el navegador. */
-async function registrarPedido(datos) {
-    return { codigo: generarCodigo() };
+   Importante: esta función se llama SIN "await" desde enviarPedido() y nunca debe
+   bloquear ni retrasar la apertura de WhatsApp (ver nota en esa función). Si
+   InfinityFree no responde a tiempo (8 s) o falla, el pedido igual se envía por
+   WhatsApp; solo no quedará guardado en el panel de administración. */
+function registrarPedido(datos) {
+    const controlador = new AbortController();
+    const limite = setTimeout(() => controlador.abort(), 8000);
+    return fetch(`${CONFIG.apiBase}/api/pedidos.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos),
+        signal: controlador.signal
+    })
+        .then(r => { if (!r.ok) throw new Error('El servidor rechazó el pedido.'); })
+        .catch(err => console.warn('Mac Chicken: el pedido se envió por WhatsApp pero no se pudo guardar en la base de datos.', err))
+        .finally(() => clearTimeout(limite));
 }
 
-async function enviarPedido() {
+function enviarPedido() {
     const lineas = lineasCarrito();
     $('#cart-error').hidden = true;
 
     if (!lineas.length) return mostrarErrorPedido('Agrega al menos un plato para enviar tu pedido.');
 
     const nombre = $('#c-nombre').value.trim();
+    const telefono = $('#c-telefono').value.trim();
     const tipo = tipoPedido();
     const direccion = $('#c-direccion').value.trim();
     const notas = $('#c-notas').value.trim();
     const pago = pagoPedido();
 
     if (!nombre) return mostrarErrorPedido('Escribe tu nombre para identificar tu pedido.', '#c-nombre');
+    if (!/^[0-9+\s-]{7,15}$/.test(telefono)) return mostrarErrorPedido('Escribe un celular válido.', '#c-telefono');
     if (tipo === 'delivery' && !direccion) return mostrarErrorPedido('Escribe tu dirección de entrega.', '#c-direccion');
 
     const subtotal = lineas.reduce((s, l) => s + l.p.price * l.q, 0);
     const envio = tipo === 'delivery' ? CONFIG.costoDelivery : 0;
     const total = subtotal + envio;
+    const codigo = generarCodigo();
 
-    const btn = $('#btn-enviar');
-    btn.disabled = true;
+    const msg = [
+        `*Pedido Mac Chicken* (${codigo})`,
+        '',
+        ...lineas.map(l => `- ${l.p.name} x${l.q}  (${money(l.p.price * l.q)})`),
+        '',
+        envio > 0 ? `Delivery: ${money(envio)}` : null,
+        `*Total:* ${money(total)}`,
+        '',
+        `*Cliente:* ${nombre}`,
+        `*Celular:* ${telefono}`,
+        `*Tipo:* ${tipo === 'delivery' ? 'Delivery' : 'Recojo en local'}`,
+        tipo === 'delivery' ? `*Dirección:* ${direccion}` : null,
+        `*Pago:* ${pago}`,
+        notas ? `*Indicaciones:* ${notas}` : null
+    ].filter(l => l !== null).join('\n');
 
-    try {
-        const { codigo } = await registrarPedido({
-            cliente: nombre, tipo, direccion, pago, notas, total,
-            items: lineas.map(l => ({ id: l.p.id, cant: l.q }))
-        });
+    // 1) WhatsApp se abre YA, en el mismo clic: nada de lo de abajo puede retrasarlo
+    //    (los navegadores bloquean los popups que no abren de inmediato tras un clic).
+    abrirWhatsApp(msg);
 
-        const msg = [
-            `*Pedido Mac Chicken* (${codigo})`,
-            '',
-            ...lineas.map(l => `- ${l.p.name} x${l.q}  (${money(l.p.price * l.q)})`),
-            '',
-            envio > 0 ? `Delivery: ${money(envio)}` : null,
-            `*Total:* ${money(total)}`,
-            '',
-            `*Cliente:* ${nombre}`,
-            `*Tipo:* ${tipo === 'delivery' ? 'Delivery' : 'Recojo en local'}`,
-            tipo === 'delivery' ? `*Dirección:* ${direccion}` : null,
-            `*Pago:* ${pago}`,
-            notas ? `*Indicaciones:* ${notas}` : null
-        ].filter(l => l !== null).join('\n');
+    // 2) Guardar en MySQL corre aparte, sin "await": si tarda o falla, a WhatsApp no le afecta.
+    registrarPedido({
+        codigo, cliente: nombre, telefono, tipo, direccion, pago, notas, total,
+        items: lineas.map(l => ({ id: l.p.id, cant: l.q }))
+    });
 
-        abrirWhatsApp(msg);
-
-        try { localStorage.setItem(LS_ULTIMO, codigo); } catch (e) { /* se ignora */ }
-        cart = {};
-        guardarCarrito();
-        renderMenu();
-        renderCart();
-        cerrarCart();
-        toast(`Pedido enviado. Tu código es ${codigo}. Guárdalo para seguirlo.`, 7000);
-    } catch (err) {
-        mostrarErrorPedido('No pudimos registrar tu pedido. Inténtalo de nuevo o escríbenos por WhatsApp.');
-    } finally {
-        btn.disabled = false;
-    }
+    try { localStorage.setItem(LS_ULTIMO, codigo); } catch (e) { /* se ignora */ }
+    cart = {};
+    guardarCarrito();
+    renderMenu();
+    renderCart();
+    cerrarCart();
+    toast(`Pedido enviado. Tu código es ${codigo}. Guárdalo para seguirlo.`, 7000);
 }
 
 /* ---------------------------------------------------------
@@ -847,14 +856,43 @@ function registrarEventos() {
     /* Imagen de respaldo si una foto no carga */
     document.addEventListener('error', e => {
         const img = e.target;
-        if (img.tagName === 'IMG' && img.closest('.card-media, .hero-photo') && !img.dataset.respaldo) {
+        if (img.tagName === 'IMG' && img.closest('.card-media, .hero-photo, .hero-slide') && !img.dataset.respaldo) {
             img.dataset.respaldo = '1';
-            img.src = img.closest('.hero-photo') ? IMG_RESPALDO_HERO : IMG_RESPALDO;
+            img.src = img.closest('.hero-photo, .hero-slide') ? IMG_RESPALDO_HERO : IMG_RESPALDO;
         }
     }, true);
-    $$('.hero-photo img').forEach(img => {
+    $$('.hero-photo img, .hero-slide img').forEach(img => {
         if (img.complete && img.naturalWidth === 0) { img.dataset.respaldo = '1'; img.src = IMG_RESPALDO_HERO; }
     });
+}
+
+/* ---------------------------------------------------------
+   9b. CARRUSEL AUTOMÁTICO DEL HERO
+   --------------------------------------------------------- */
+function iniciarCarruselHero() {
+    const cont = $('#hero-carousel');
+    const hero = cont && cont.closest('.hero');
+    const slides = cont ? $$('.hero-slide', cont) : [];
+    if (!hero || slides.length < 2) return;
+
+    let idx = Math.max(0, slides.findIndex(s => s.classList.contains('is-active')));
+    let temporizador = null;
+    let reanudar = null;
+
+    function mostrar(i) {
+        slides[idx].classList.remove('is-active');
+        idx = i;
+        slides[idx].classList.add('is-active');
+    }
+    function siguiente() { mostrar((idx + 1) % slides.length); }
+    function detener() { clearInterval(temporizador); temporizador = null; }
+    function reproducir() { detener(); temporizador = setInterval(siguiente, 2800); }
+
+    reproducir();
+    hero.addEventListener('mouseenter', detener);
+    hero.addEventListener('mouseleave', reproducir);
+    hero.addEventListener('touchstart', () => { clearTimeout(reanudar); detener(); }, { passive: true });
+    hero.addEventListener('touchend', () => { clearTimeout(reanudar); reanudar = setTimeout(reproducir, 2500); }, { passive: true });
 }
 
 /* ---------------------------------------------------------
@@ -863,6 +901,7 @@ function registrarEventos() {
 async function iniciar() {
     cart = cargarCarrito();
     registrarEventos();
+    iniciarCarruselHero();
     renderHorarios();
     prepararReserva();
     actualizarHoras();

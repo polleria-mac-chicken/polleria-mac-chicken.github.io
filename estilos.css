@@ -173,12 +173,15 @@ ul { margin: 0; padding: 0; list-style: none; }
 .logo-box {
     display: inline-block;
     background: var(--yellow); color: var(--ink);
-    padding: .35rem .85rem;
+    padding: .4rem 1rem;
     border-radius: 18px 8px;
     transform: rotate(-2deg);
-    font-family: var(--font-display); font-size: 1.15rem; line-height: 1; letter-spacing: .02em;
+    font-family: var(--font-display); font-size: 1.3rem; line-height: 1; letter-spacing: .02em;
     white-space: nowrap;
+    box-shadow: 0 6px 16px -4px rgba(214, 214, 0, .55);
+    transition: transform .2s;
 }
+.brand:hover .logo-box { transform: rotate(-2deg) scale(1.06); }
 
 /* --- Badge Abierto / Cerrado --- */
 .status-badge {
@@ -306,14 +309,21 @@ ul { margin: 0; padding: 0; list-style: none; }
     min-height: clamp(30rem, 82vh, 46rem);
     padding: clamp(3rem, 8vw, 5rem) 0 clamp(3.5rem, 8vw, 5.5rem);
     color: #fff;
-    background-color: var(--ink);                 /* se ve mientras carga la foto o si falta */
-    /* FOTO DE FONDO: reemplaza el archivo img/fondo-pollo.jpg por tu foto (horizontal, mín. 1600 px de ancho) */
-    background-image: url('img/pollo0.jpg');
-    background-size: cover;
-    background-position: center;
+    background-color: var(--ink);                 /* se ve mientras cargan las fotos del carrusel */
     border-radius: 0 0 var(--r-xl) var(--r-xl);
     overflow: hidden;
 }
+
+/* Carrusel automático de fondo (ver iniciarCarruselHero() en script.js) */
+.hero-carousel { position: absolute; inset: 0; z-index: -2; }
+.hero-slide {
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+.hero-slide.is-active { opacity: 1; }
+.hero-slide img { width: 100%; height: 100%; object-fit: cover; }
+
 /* Capa oscura: más fuerte detrás del texto para que siempre se lea */
 .hero::before {
     content: ""; position: absolute; inset: 0; z-index: -1;
@@ -327,6 +337,18 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 .hero-inner { display: grid; gap: 2.75rem; }
 .hero-copy { max-width: 40rem; }
+
+/* Logotipo destacado sobre el titular del hero */
+.hero-logo {
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: .55rem 1.3rem;
+    background: var(--yellow); color: var(--ink);
+    border-radius: 18px 8px;
+    transform: rotate(-2deg);
+    font-family: var(--font-display); font-size: clamp(1.3rem, 3vw, 1.75rem); line-height: 1; letter-spacing: .03em;
+    box-shadow: 0 12px 28px -8px rgba(0, 0, 0, .5), 0 0 0 3px rgba(255, 255, 255, .15) inset;
+}
 
 .hero h1 {
     font-family: var(--font-display); font-weight: 400;
