@@ -2,28 +2,20 @@
    MAC CHICKEN — script.js
 
    ORDEN DEL ARCHIVO
-   1. CONFIG ............ datos del negocio y horario
-   2. DATOS DE EJEMPLO .. 🔴 aquí se reemplaza por PHP/MySQL
+   1. CONFIG ............ datos del negocio, horario y CONFIG.apiBase
+   2. PRODUCTOS_DEMO ..... respaldo si falla la API (ver cargarProductos)
    3. Utilidades
-   4. Estado del local (Abierto / Cerrado)   🔴 PHP/MySQL
-   5. Carta (productos)                      🔴 PHP/MySQL
-   6. Pedido (carrito + envío)               🔴 PHP/MySQL
-   7. Reserva de mesa                        🔴 PHP/MySQL
-   8. Seguimiento de pedido                  🔴 PHP/MySQL
+   4. Estado del local (Abierto / Cerrado)   → api/estado.php
+   5. Carta (productos)                      → api/productos.php
+   6. Pedido (carrito + envío)               → api/pedidos.php
+   7. Reserva de mesa                        → api/reservas.php
+   8. Seguimiento de pedido                  → api/pedido.php
    9. Navegación, modales y eventos
    10. Inicio
 
-   Las funciones marcadas con 🔴 son las únicas que debes tocar
-   para conectar la base de datos. Hoy devuelven datos de ejemplo
-   y tienen el fetch() de PHP escrito como comentario.
-
-   TABLAS SUGERIDAS (MySQL)
-   - categorias (id, nombre)
-   - productos  (id, nombre, precio, categoria_id, descripcion, imagen, etiqueta, disponible)
-   - horarios   (dia 0-6, abre, cierra)   -- 0 = domingo
-   - pedidos    (id, codigo, cliente, tipo, direccion, pago, notas, estado, total, creado, actualizado)
-   - pedido_items (pedido_id, producto_id, cantidad, precio)
-   - reservas   (id, nombre, telefono, fecha, hora, personas, notas, estado)
+   Backend: PHP + MySQL en InfinityFree (carpeta backend-infinityfree/).
+   CONFIG.apiBase apunta a ese dominio; todas las funciones de este archivo
+   que hablan con la base de datos usan fetch() contra esa URL.
    ========================================================= */
 'use strict';
 
@@ -36,9 +28,12 @@ const CONFIG = {
     costoDelivery: 0,                 // en soles; si es 0 no se muestra la línea "Delivery"
     maxHorasReserva: 60,              // minutos antes del cierre en que ya no se aceptan reservas
 
-    // 🔴 Backend en InfinityFree (API + base de datos). El frontend sigue en GitHub Pages;
-    // solo este dominio cambia cuando subas la carpeta backend-infinityfree/ a tu hosting.
-    apiBase: 'https://tudominio.great-site.net',
+    // Backend en InfinityFree (API + base de datos). El frontend sigue en GitHub Pages.
+    // IMPORTANTE: debe ser https. GitHub Pages sirve esta web por https y los navegadores
+    // bloquean que una página https pida datos a una dirección http ("contenido mixto").
+    // En InfinityFree activa el SSL gratis de tu dominio (vPanel → SSL/TLS Status) y
+    // comprueba que https://macchicken-api.ifree.page abra sin error antes de publicar.
+    apiBase: 'https://macchicken-api.ifree.page',
 
     // Horario por día (0 = domingo … 6 = sábado). null = cerrado todo el día.
     // 🔴 Ajusta las horas reales. Formato 24 h "HH:MM". El horario no cruza la medianoche.
@@ -60,10 +55,10 @@ const LS_CARRITO = 'macchicken_carrito_v1';
 const LS_ULTIMO = 'macchicken_ultimo_pedido';
 
 /* ---------------------------------------------------------
-   2. DATOS DE EJEMPLO  🔴
+   2. CATEGORÍAS Y CARTA DE RESPALDO
    --------------------------------------------------------- */
 
-// 🔴 Categorías (luego: tabla `categorias`). 'all' siempre existe.
+// Categorías de la carta (mismas que CATEGORIAS_CARTA en funciones.php). 'all' siempre existe.
 const CATEGORIAS = [
     { id: 'all', nombre: 'Todos' },
     { id: 'pollo', nombre: 'Pollo y platos' },
@@ -71,10 +66,9 @@ const CATEGORIAS = [
     { id: 'calientes', nombre: 'Calientes' }
 ];
 
-// 🔴 Productos (luego: tabla `productos`). Mantén estos mismos nombres de campo
-// en el JSON que devuelva PHP: id, name, price, cat, desc, img, tag, disponible.
-// Los ids (1-21) coinciden a propósito con los de la tabla `productos` de script.sql,
-// para que un pedido enviado desde aquí se guarde en el plato correcto en InfinityFree.
+// Carta de respaldo: solo se usa si falla la conexión con api/productos.php
+// (ver iniciar(), más abajo), para que la página nunca se quede sin carta.
+// Los ids (1-21) coinciden a propósito con los de la tabla `productos` de script.sql.
 const PRODUCTOS_DEMO = [
     { id: 1,  name: "Té filtrante", price: 3, cat: "calientes", desc: "Bebida caliente natural", img: "img/te.jpg", disponible: true },
     { id: 2,  name: "Manzanilla filtrante", price: 2.5, cat: "calientes", desc: "Relajante y digestiva", img: "img/manzanilla.jpg", disponible: true },
@@ -107,16 +101,6 @@ const ESTADOS_PEDIDO = [
     { id: 'entregado',  titulo: 'Entregado',        desc: 'Que lo disfrutes.',               icono: 'fa-check' }
 ];
 
-// 🔴 SOLO PARA PROBAR EL DISEÑO. Se elimina cuando conectes la base de datos.
-const PEDIDOS_DEMO = {
-    'MC-1001': { codigo: 'MC-1001', estado: 'preparando', tipo: 'delivery', eta: 25, total: 45,
-                 items: [{ nombre: '1/2 pollo a la brasa', cant: 1 }, { nombre: 'Inca Kola 1.5L', cant: 1 }] },
-    'MC-1002': { codigo: 'MC-1002', estado: 'en_camino', tipo: 'delivery', eta: 10, total: 22,
-                 items: [{ nombre: 'Mostrito brasa', cant: 1 }] },
-    'MC-1003': { codigo: 'MC-1003', estado: 'entregado', tipo: 'recojo', eta: 0, total: 65,
-                 items: [{ nombre: 'Pollo entero a la brasa', cant: 1 }] }
-};
-
 /* ---------------------------------------------------------
    3. UTILIDADES
    --------------------------------------------------------- */
@@ -126,7 +110,6 @@ const money = n => `S/ ${Number(n).toFixed(2)}`;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const toMin = hhmm => { const [h, m] = hhmm.split(':').map(Number); return h * 60 + m; };
-const pausa = ms => new Promise(r => setTimeout(r, ms));
 
 function a12h(hhmm) {
     const [h, m] = hhmm.split(':').map(Number);
@@ -203,17 +186,20 @@ function calcularEstado() {
     return { abierto: false, detalle: 'Por ahora no tenemos horario de atención.' };
 }
 
-/* 🔴 CONEXIÓN PHP/MySQL
-   Para que el dueño pueda abrir/cerrar el local a mano o cambiar horarios desde un panel,
-   reemplaza el cuerpo por:
-
-     const r = await fetch('api/estado.php');
-     const d = await r.json();
-     // api/estado.php debe responder: { "abierto": true, "cierraPronto": false, "detalle": "Atendemos hasta las 11:00 p. m." }
-     return d;
-*/
+/* Estado del local: lo calcula el panel de administración (api/estado.php).
+   Si el dueño abre/cierra a mano o cambia el horario desde el panel, aquí se ve
+   reflejado al instante. Si la API no responde, se usa el horario guardado en
+   CONFIG.horario (calcularEstado(), más abajo en refrescarEstado()). */
 async function obtenerEstado() {
-    return calcularEstado();
+    const r = await fetch(`${CONFIG.apiBase}/api/estado.php`, { cache: 'no-store' });
+    if (!r.ok) throw new Error('No se pudo consultar el estado del local.');
+    const d = await r.json();
+
+    // El panel puede cambiar el horario y el costo de delivery: se actualizan en vivo.
+    if (Array.isArray(d.horario)) CONFIG.horario = d.horario;
+    if (typeof d.costoDelivery === 'number') CONFIG.costoDelivery = d.costoDelivery;
+
+    return { abierto: d.abierto, cierraPronto: d.cierraPronto, detalle: d.detalle };
 }
 
 function pintarEstado(e) {
@@ -227,11 +213,18 @@ function pintarEstado(e) {
 }
 
 async function refrescarEstado() {
-    try { pintarEstado(await obtenerEstado()); }
-    catch (err) { pintarEstado(calcularEstado()); } // si falla la API, se usa el horario local
+    try {
+        pintarEstado(await obtenerEstado());
+        renderHorarios();   // por si el panel cambió el horario
+        renderCart();       // por si el panel cambió el costo de delivery
+    } catch (err) {
+        pintarEstado(calcularEstado()); // si falla la API, se usa el horario local
+    }
 }
 
-/* 🔴 Lista de horarios (footer y sección Ubicación). Luego: datos de la tabla `horarios`. */
+/* Lista de horarios (footer y sección Ubicación). CONFIG.horario viene de
+   api/estado.php cuando hay conexión (ver obtenerEstado), o del horario local
+   de más arriba si la API falla. */
 function renderHorarios() {
     const hoy = ahoraLima().dia;
     const html = ORDEN_DIAS.map(d => {
@@ -248,14 +241,12 @@ function renderHorarios() {
 let productos = [];
 const filtro = { cat: 'all', q: '' };
 
-/* 🔴 CONEXIÓN PHP/MySQL
-   Reemplaza el cuerpo por:
-
-     const r = await fetch('api/productos.php');
-     return await r.json();   // arreglo de { id, name, price, cat, desc, img, tag, disponible }
-*/
+/* Carta real desde MySQL (api/productos.php). Si falla, iniciar() usa PRODUCTOS_DEMO
+   como respaldo para que la página nunca se quede sin carta. */
 async function cargarProductos() {
-    return PRODUCTOS_DEMO;
+    const r = await fetch(`${CONFIG.apiBase}/api/productos.php`, { cache: 'no-store' });
+    if (!r.ok) throw new Error('No se pudo cargar la carta.');
+    return await r.json();
 }
 
 const findProducto = id => productos.find(p => p.id === Number(id));
@@ -579,19 +570,16 @@ function actualizarHoras() {
     sel.disabled = false;
 }
 
-/* 🔴 CONEXIÓN PHP/MySQL (opcional)
-   Guardar la reserva en la base de datos:
-
-     const r = await fetch('api/reservas.php', {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(datos)  // { nombre, telefono, fecha, hora, personas, notas }
-     });
-     if (!r.ok) throw new Error('No se pudo registrar la reserva');
-     return await r.json();
-*/
+/* Guarda la reserva en MySQL (api/reservas.php). */
 async function registrarReserva(datos) {
-    return { ok: true };
+    const r = await fetch(`${CONFIG.apiBase}/api/reservas.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)   // { nombre, telefono, fecha, hora, personas, notas }
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'No se pudo registrar la reserva.');
+    return d;
 }
 
 async function enviarReserva(e) {
@@ -653,30 +641,13 @@ function normalizarCodigo(v) {
     return v;
 }
 
-/* 🔴 CONEXIÓN PHP/MySQL
-   Reemplaza el cuerpo por:
-
-     const r = await fetch('api/pedido.php?codigo=' + encodeURIComponent(codigo));
-     if (r.status === 404) return null;
-     if (!r.ok) throw new Error('Error de servidor');
-     return await r.json();
-
-   api/pedido.php debe responder exactamente con esta forma:
-     {
-       "codigo": "MC-1001",
-       "estado": "preparando",        // recibido | preparando | en_camino | entregado
-       "tipo": "delivery",            // delivery | recojo
-       "eta": 25,                     // minutos estimados (0 o null si no aplica)
-       "total": 45.00,
-       "actualizado": "2026-10-09T18:30:00-05:00",
-       "items": [ { "nombre": "1/2 pollo a la brasa", "cant": 1 } ]
-     }
-   Para que el estado cambie "en vivo", basta con que el local actualice la columna
-   `estado` en MySQL: esta pantalla vuelve a consultar cada 30 segundos. */
+/* Seguimiento real (api/pedido.php). El estado cambia "en vivo": basta con que el
+   local actualice el pedido en el panel; esta pantalla vuelve a consultar cada 30 s. */
 async function buscarPedido(codigo) {
-    await pausa(350);
-    const p = PEDIDOS_DEMO[codigo];
-    return p ? { ...p, actualizado: new Date().toISOString() } : null;
+    const r = await fetch(`${CONFIG.apiBase}/api/pedido.php?codigo=${encodeURIComponent(codigo)}`, { cache: 'no-store' });
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error('Error de servidor');
+    return await r.json();
 }
 
 function renderPedido(p) {
