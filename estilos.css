@@ -15,6 +15,7 @@
    11. Formularios y modales
    12. Línea de tiempo del seguimiento
    13. Toast y accesibilidad
+   14. PWA (banner de instalación)
    ========================================================= */
 
 /* ===== 1. TOKENS ===== */
@@ -782,4 +783,38 @@ textarea.input { min-height: 4.6rem; resize: vertical; }
         transition-duration: .01ms !important;
         scroll-behavior: auto !important;
     }
+}
+
+/* ===== 14. PWA (BANNER DE INSTALACIÓN) ===== */
+.pwa-banner {
+    position: fixed; left: .75rem; right: .75rem;
+    top: calc(var(--header-h) + .6rem); z-index: 120;
+    display: flex; flex-direction: column; gap: .8rem;
+    padding: .9rem 1rem;
+    background: var(--ink); color: #fff;
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-2);
+    animation: pwa-in .3s ease-out;
+}
+.pwa-banner-close {
+    position: absolute; top: .5rem; right: .5rem;
+    width: 32px; height: 32px; border-radius: 50%; border: 0;
+    background: rgba(255, 255, 255, .12); color: #fff;
+    display: grid; place-items: center; font-size: .85rem;
+}
+.pwa-banner-close:hover { background: rgba(255, 255, 255, .22); }
+
+.pwa-banner-body { display: flex; align-items: center; gap: .85rem; padding-right: 1.75rem; }
+.pwa-banner-icon { flex: none; width: 46px; height: 46px; border-radius: 12px; }
+.pwa-banner-body strong { display: block; margin-bottom: .2rem; font-size: 1rem; }
+.pwa-banner-body p { margin: 0; font-size: .86rem; line-height: 1.35; color: rgba(255, 255, 255, .78); }
+.pwa-banner-body i { color: var(--yellow); }
+
+@keyframes pwa-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (min-width: 640px) {
+    .pwa-banner { left: auto; right: 1.25rem; width: 23rem; }
 }

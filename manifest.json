@@ -1,0 +1,18 @@
+{
+    "name": "Mac Chicken",
+    "short_name": "Mac Chicken",
+    "description": "Pollo a la brasa, chaufa y mollejitas en Pimentel, Chiclayo. Pide por delivery o recojo.",
+    "lang": "es-PE",
+    "start_url": ".",
+    "scope": ".",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#1a1a1a",
+    "theme_color": "#1a1a1a",
+    "icons": [
+        { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+        { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+        { "src": "img/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+        { "src": "img/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+}

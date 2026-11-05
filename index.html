@@ -7,6 +7,16 @@
     <meta name="description" content="Pollo a la brasa, chaufa, mollejitas y más. Pide por delivery o recojo, reserva tu mesa y sigue tu pedido en Mac Chicken, Km 4.5 Carretera Pimentel.">
     <meta name="theme-color" content="#1a1a1a">
 
+    <!-- ===== PWA: instalable como app en el celular (Android e iOS) ===== -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="img/icon-512.png">
+    <!-- Safari (iOS) no lee manifest.json: necesita estas etiquetas aparte -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Mac Chicken">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+
     <!-- Fuentes e íconos -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -463,6 +473,30 @@
         <div id="track-result" aria-live="polite"></div>
     </div>
 </dialog>
+
+<!-- =====================================================
+     PWA: banner para instalar la app en el celular
+     Lo muestra/oculta initPWA() en script.js. En Android/Chrome aparece
+     el botón "Instalar app"; en iPhone (Safari) aparece la instrucción
+     de "Compartir → Agregar a inicio", porque iOS no tiene instalación
+     automática. Se oculta solo si ya está instalada o si el cliente la
+     cierra (no vuelve a aparecer por 14 días).
+     ===================================================== -->
+<div class="pwa-banner" id="pwa-banner" hidden role="dialog" aria-label="Instalar la app de Mac Chicken">
+    <button type="button" class="pwa-banner-close" id="pwa-banner-cerrar" aria-label="Cerrar aviso de instalación">
+        <i class="fas fa-xmark" aria-hidden="true"></i>
+    </button>
+    <div class="pwa-banner-body">
+        <img class="pwa-banner-icon" src="img/icon-192.png" alt="" width="46" height="46">
+        <div>
+            <strong>Instala Mac Chicken</strong>
+            <p id="pwa-banner-texto">Pide más rápido desde tu pantalla de inicio, sin entrar al navegador.</p>
+        </div>
+    </div>
+    <button type="button" class="btn btn-yellow btn-block" id="pwa-banner-instalar" hidden>
+        <i class="fas fa-download" aria-hidden="true"></i> Instalar app
+    </button>
+</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

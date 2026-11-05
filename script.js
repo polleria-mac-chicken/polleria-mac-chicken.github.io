@@ -11,7 +11,8 @@
    7. Reserva de mesa                        → api/reservas.php
    8. Seguimiento de pedido                  → api/pedido.php
    9. Navegación, modales y eventos
-   10. Inicio
+   10. PWA (instalar como app)
+   11. Inicio
 
    Backend: PHP + MySQL en InfinityFree (carpeta backend-infinityfree/).
    CONFIG.apiBase apunta a ese dominio; todas las funciones de este archivo
@@ -28,12 +29,14 @@ const CONFIG = {
     costoDelivery: 0,                 // en soles; si es 0 no se muestra la línea "Delivery"
     maxHorasReserva: 60,              // minutos antes del cierre en que ya no se aceptan reservas
 
-    // Backend en InfinityFree (API + base de datos). El frontend sigue en GitHub Pages.
-    // IMPORTANTE: debe ser https. GitHub Pages sirve esta web por https y los navegadores
-    // bloquean que una página https pida datos a una dirección http ("contenido mixto").
-    // En InfinityFree activa el SSL gratis de tu dominio (vPanel → SSL/TLS Status) y
-    // comprueba que https://macchicken-api.ifree.page abra sin error antes de publicar.
-    apiBase: 'https://macchicken-api.ifree.page',
+    // La web (index.html) y la API (carpeta api/) viven ahora en el mismo servidor
+    // de InfinityFree, así que todas las llamadas usan rutas relativas al propio
+    // dominio: fetch(`${CONFIG.apiBase}/api/...`) queda como fetch('/api/...').
+    // Si en el futuro vuelves a separar el frontend a otro dominio (por ejemplo
+    // GitHub Pages), pon aquí la URL completa en https de la API, p. ej.
+    // 'https://macchicken-api.ifree.page' (nunca http: el navegador bloquea pedir
+    // datos http desde una página https).
+    apiBase: '',
 
     // Horario por día (0 = domingo … 6 = sábado). null = cerrado todo el día.
     // 🔴 Ajusta las horas reales. Formato 24 h "HH:MM". El horario no cruza la medianoche.
@@ -867,7 +870,80 @@ function iniciarCarruselHero() {
 }
 
 /* ---------------------------------------------------------
-   10. INICIO
+   10. PWA (INSTALAR COMO APP)
+   Registra el service worker y, solo en celulares, muestra el banner
+   de #pwa-banner: en Android/Chrome con el botón nativo "Instalar app"
+   (evento beforeinstallprompt); en iPhone/iPad (Safari no tiene ese
+   evento) con la instrucción "Compartir → Agregar a inicio". No aparece
+   si ya está instalada, ni en computadoras, ni de nuevo antes de 14 días
+   si la persona la cerró.
+   --------------------------------------------------------- */
+const LS_PWA_CERRADO = 'macchicken_pwa_cerrado';
+const PWA_DIAS_REAPARECER = 14;
+
+function registrarServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.register('sw.js')
+        .catch(err => console.warn('Mac Chicken: no se pudo activar el modo app (service worker).', err));
+}
+
+function initPWA() {
+    registrarServiceWorker();
+
+    // Ya instalada (abierta como app, no como pestaña del navegador): no mostrar nada.
+    const yaInstalada = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (yaInstalada) return;
+
+    const ua = navigator.userAgent;
+    const esIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const esAndroid = /Android/.test(ua);
+    if (!esIOS && !esAndroid) return; // el banner es solo para celulares
+
+    const cerradoHace = Number((() => { try { return localStorage.getItem(LS_PWA_CERRADO); } catch (e) { return 0; } })() || 0);
+    if (Date.now() - cerradoHace < PWA_DIAS_REAPARECER * 24 * 60 * 60 * 1000) return;
+
+    const banner = $('#pwa-banner');
+    const texto = $('#pwa-banner-texto');
+    const btnInstalar = $('#pwa-banner-instalar');
+
+    function ocultarBanner(recordar) {
+        banner.hidden = true;
+        if (recordar) { try { localStorage.setItem(LS_PWA_CERRADO, String(Date.now())); } catch (e) { /* se ignora */ } }
+    }
+    $('#pwa-banner-cerrar').addEventListener('click', () => ocultarBanner(true));
+
+    if (esAndroid) {
+        let promptDiferido = null;
+
+        // Chrome avisa aquí que la web cumple los requisitos para instalarse;
+        // se guarda el evento para poder disparar el cuadro nativo con el botón.
+        window.addEventListener('beforeinstallprompt', e => {
+            e.preventDefault();
+            promptDiferido = e;
+            btnInstalar.hidden = false;
+            banner.hidden = false;
+        });
+
+        btnInstalar.addEventListener('click', async () => {
+            if (!promptDiferido) return;
+            btnInstalar.disabled = true;
+            promptDiferido.prompt();
+            await promptDiferido.userChoice;
+            promptDiferido = null;
+            ocultarBanner(true);
+        });
+
+        window.addEventListener('appinstalled', () => ocultarBanner(true));
+    } else if (esIOS) {
+        // Safari no tiene instalación con un clic: solo se le puede explicar el camino manual.
+        texto.innerHTML = 'Toca <i class="fas fa-arrow-up-from-bracket" aria-hidden="true"></i> (Compartir) y luego "Agregar a inicio".';
+        btnInstalar.hidden = true;
+        setTimeout(() => { banner.hidden = false; }, 2500); // deja ver la página antes de interrumpir
+    }
+}
+
+/* ---------------------------------------------------------
+   11. INICIO
    --------------------------------------------------------- */
 async function iniciar() {
     cart = cargarCarrito();
@@ -877,6 +953,7 @@ async function iniciar() {
     prepararReserva();
     actualizarHoras();
     actualizarCampoDireccion();
+    initPWA();
 
     try {
         productos = await cargarProductos();
