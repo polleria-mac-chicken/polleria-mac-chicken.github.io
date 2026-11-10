@@ -72,8 +72,6 @@ html {
 
 body {
     margin: 0;
-    width: 100%;
-    overflow-x: hidden;
     font-family: var(--font-body);
     font-size: 1rem;
     line-height: 1.5;
@@ -292,6 +290,19 @@ ul { margin: 0; padding: 0; list-style: none; }
 .burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
 .burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
 .burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* El logo + la insignia "Abierto/Cerrado" a tamaño completo necesitan
+   ~390px para no chocar con los botones de la derecha — así que esto
+   también afecta al ancho de celular más común (375px, iPhone estándar),
+   no solo a los muy angostos. Se encogen un poco hasta los 399px; de ahí
+   para arriba el diseño queda exactamente igual que antes. */
+@media (max-width: 399px) {
+    .header-inner { gap: .35rem; }
+    .logo-box { padding: .32rem .65rem; font-size: 1rem; }
+    .status-badge { padding: .32rem .5rem; font-size: .74rem; gap: .3rem; }
+    .header-actions { gap: .2rem; }
+    .icon-btn { width: 38px; height: 38px; font-size: .95rem; }
+}
 
 @media (min-width: 520px) {
     .brand-avatar { display: block; }
