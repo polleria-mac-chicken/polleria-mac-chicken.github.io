@@ -57,11 +57,23 @@
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    /* Red de seguridad: evita cualquier scroll horizontal accidental (y el
+       "borde" blanco que se ve al costado en algunos celulares/tablets si
+       algo se pasa por un par de píxeles). No recorta nada del diseño: solo
+       actúa si algo excede el ancho de la pantalla. */
+    overflow-x: hidden;
+    width: 100%;
+    background: var(--paper);
+}
 [id] { scroll-margin-top: calc(var(--header-h) + 1rem); }
 
 body {
     margin: 0;
+    width: 100%;
+    overflow-x: hidden;
     font-family: var(--font-body);
     font-size: 1rem;
     line-height: 1.5;
